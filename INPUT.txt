@@ -1,0 +1,14 @@
+E_c = 
+delta_So =      0.2
+E_g    = 1.5
+E_v = -7
+gamma_1^L = 0.2
+gamma_2^L = 0.1
+gamma_3^L = 0.2
+m_c* = 0.088
+a = 0.7
+E_p = 22
+begin kpath
+
+end kpath
+

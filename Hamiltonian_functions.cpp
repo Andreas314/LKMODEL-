@@ -53,7 +53,7 @@ void hamiltonian::get_vector(int n, unique_ptr<c_d[]>& array){
 	}
 }
 c_d hamiltonian::get_value(int n){
-	return eigen_vects[n];
+	return eigen_vals[n];
 }
 
 string hamiltonian::get_filename(){
@@ -66,13 +66,15 @@ int hamiltonian::get_size(){
 	return size;
 }
 void hamiltonian::print_ham(){
+	cout << "\n";
 	for (int ii = 0; ii < 64; ii++){
 		if (ii % 8 == 0 && ii != 0){
 			cout << endl;
 		}
-		cout << values[ii];
+		printf("|%1.2f + %1.2fi|", real(values[ii]), imag(values[ii]));
 		
 	}
+	cout << "\n";
 }
 
 void hamiltonian::assemble(double kx, double ky, double kz){
@@ -140,7 +142,7 @@ void hamiltonian::to_matrix(c_d (&input)[9]){
 	values[10] = sqrt(2) * input[6];
 	values[11] = -input[6];
 	values[14] = -input[7];
-	values[15] = sqrt(2) * input[7];
+	values[15] = -sqrt(2) * input[7];
 	values[16] = sqrt(2) * input[5];
 	values[17] = sqrt(2) * conj(input[6]);
 	values[19] = -sqrt(2) * input[8];
@@ -162,7 +164,7 @@ void hamiltonian::copy_other_half(){
 		}
 		else
 		{
-			values[ii-4] = values[ii - 32];
+			values[ii-4] = -conj(values[ii - 32]);
 		}
 	}
 }

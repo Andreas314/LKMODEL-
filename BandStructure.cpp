@@ -76,8 +76,10 @@ using namespace std;
 		num_kpoints = string_to_int(num_points);
 	}
 	void band_structure::fill_kpoints(ifstream &input){
-		string line, first = "";
-		while(first != "end"){
+		len_kpath = 0;
+		string line;
+		bool end_switch = false;
+		while(true){
 			if(!getline(input, line)){
 				throw runtime_error("Error: Wrong kpath format, could reach the end keyword!");
 			}
@@ -86,15 +88,19 @@ using namespace std;
 			for ( int ii = 0; ii < 3; ++ii){
 				string value;
 				ss >> value;
-				if (ii == 0){
-					first = value;
+				if (value == "end"){
+					end_switch = true;
+					break;
 				}
 				double coord = string_to_double(value);
 				point[ii] = coord;
 			}
+			if (end_switch){
+				break;
+			}
+			len_kpath++;
 			kpath.emplace_back(point);
 		}
-		len_kpath = kpath.size();
 		if (len_kpath == 0 || len_kpath % 2 != 0){
 			throw runtime_error("Error: Number of points in kpath must be nonzero and even!");
 		}
@@ -162,7 +168,7 @@ using namespace std;
 				complex<double> energy = MyHamiltonian.get_value(ii);
 				if (imag(energy) > tol){
 					cout << "Warning: Imaginary part of the energy in (" << kx <<"," 
-						<< ky <<  "," << kz << ") is greater than the tolerance: " << tol << "!";
+						<< ky <<  "," << kz << ") is greater than the tolerance: " << imag(energy) << "!";
 				}
 				bands[ii].emplace_back(real(energy));	
 			}

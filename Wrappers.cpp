@@ -22,7 +22,9 @@ extern "C" int dgemm_(char*, char*, int*, int*, int*, double*, double*, int*, do
 extern "C" int sgemm_(char*, char*, int*, int*, int*, float*, float*, int*, float*, int*, float*, float*, int*);
 extern "C" int cgemm_(char*, char*, int*, int*, int*, complex<float>*, complex<float>*, int*, complex<float>*, int*, complex<float>*, complex<float>*, int*);
 extern "C" int zgemm_(char*, char*, int*, int*, int*, complex<double>*, complex<double>*, int*, complex<double>*, int*, complex<double>*, complex<double>*, int*);
-
+// Eigenvector solver for symm matrices
+extern "C" int ssyev_(char *, char *, int*, float*, int*, float*, float*, int*, int*);
+extern "C" int dsyev_(char *, char *, int*, double*, int*, double*, double*, int*, int*);
 
 //Implementation of Eigen solver wrapper
 template<typename T>
@@ -78,7 +80,7 @@ template<>
 void Eigens_Wrapper(unique_ptr<complex<double>[]>& input, unique_ptr<complex<double>[]>& Eigen_values_real,
 	       	unique_ptr<complex<double>[]>& Eigen_values_imaginary, unique_ptr<complex<double>[]> & Eigen_vectors, int Dimension){
     int info, lwork;
-    lwork = 8 * Dimension; //size of the buffer work
+    lwork = 4 * Dimension; //size of the buffer work
     unique_ptr<complex<double>[]> work = make_unique<complex<double>[]>(lwork); 
     complex<double> *EMPTY; //Placeholder for right eigenvectors
     char Eigen_Switch = 'N'; //Right eigenvectors not need
@@ -119,9 +121,28 @@ void Matmul_Wrapper(unique_ptr<complex<double>[]>& A, unique_ptr<complex<double>
 	complex<double> beta = 1.0;
 	zgemm_(&Switch, &Switch, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
 }
+template<typename T>
+void Eigens_Symm_Wrapper(std::unique_ptr<T[]>& input, std::unique_ptr<T[]>& eigens, int dim);
 
+template<>
+void Eigens_Symm_Wrapper(std::unique_ptr<float[]>& input, std::unique_ptr<float[]>& eigens, int dim){
+	char JOBZ = 'V';
+	char UPLO = 'U';
+	int LWORK = 4 * dim;
+	unique_ptr<float[]> WORK = make_unique<float[]>(LWORK);
+	int INFO;
+	ssyev_(&JOBZ, &UPLO, &dim, input.get(), &dim, eigens.get(), WORK.get(), &LWORK, &INFO);
+}
 
-
+template<>
+void Eigens_Symm_Wrapper(std::unique_ptr<double[]>& input, std::unique_ptr<double[]>& eigens, int dim){
+	char JOBZ = 'V';
+	char UPLO = 'L';
+	int LWORK = 4 * dim;
+	unique_ptr<double[]> WORK = make_unique<double[]>(LWORK);
+	int INFO;
+	dsyev_(&JOBZ, &UPLO, &dim, input.get(), &dim, eigens.get(), WORK.get(), &LWORK, &INFO);
+}
 //declarations:
 //Eigenvectors
 template void Eigens_Wrapper(unique_ptr<double[]>&, unique_ptr<double[]>&, unique_ptr<double[]>&, unique_ptr<double[]>&, int);
@@ -133,3 +154,6 @@ template void Matmul_Wrapper(unique_ptr<float[]>&, unique_ptr<float[]>&, unique_
 template void Matmul_Wrapper(unique_ptr<double[]>&, unique_ptr<double[]>&, unique_ptr<double[]>&, int, int, int, double);
 template void Matmul_Wrapper(unique_ptr<complex<float>[]>&, unique_ptr<complex<float>[]>&, unique_ptr<complex<float>[]>&, int, int, int, complex<float>);
 template void Matmul_Wrapper(unique_ptr<complex<double>[]>&, unique_ptr<complex<double>[]>&, unique_ptr<complex<double>[]>&, int, int, int, complex<double>);
+
+void Eigens_Symm_Wrapper(std::unique_ptr<float[]>&, std::unique_ptr<float[]>&, int);
+void Eigens_Symm_Wrapper(std::unique_ptr<double[]>&, std::unique_ptr<double[]>&, int);

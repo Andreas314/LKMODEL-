@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include <array>
-#include "Hamiltonian_functions.h"
+#include "Hamiltonian_functions_real.h"
 class band_structure{
 public:
 	band_structure(hamiltonian &input);

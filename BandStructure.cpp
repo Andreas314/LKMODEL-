@@ -8,7 +8,7 @@
 #include <cmath>
 #include <complex>
 #include <cstdlib>
-#include "Hamiltonian_functions.h"
+#include "Hamiltonian_functions_real.h"
 #include "BandStructure.h"
 using namespace std;
 
@@ -151,7 +151,7 @@ using namespace std;
 		for (int ii = 0; ii < 3; ++ii){
 			norm += vec[ii] * vec[ii];
 		}
-		return norm;
+		return sqrt(norm);
 	}
 	void band_structure::compute_eigenvals(){
 		for (int ii = 0; ii < 8; ++ii){
@@ -165,12 +165,12 @@ using namespace std;
 			double kz = point[2];
 			MyHamiltonian.diagonal_at_k_point(kx, ky, kz);
 			for (int ii = 0; ii < size; ++ii){
-				complex<double> energy = MyHamiltonian.get_value(ii);
-				if (imag(energy) > tol){
-					cout << "Warning: Imaginary part of the energy in (" << kx <<"," 
-						<< ky <<  "," << kz << ") is greater than the tolerance: " << imag(energy) << "!";
-				}
-				bands[ii].emplace_back(real(energy));	
+				double energy = MyHamiltonian.get_value(2 * ii);
+				//if (imag(energy) > tol){
+				//	cout << "Warning: Imaginary part of the energy in (" << kx <<"," 
+				//		<< ky <<  "," << kz << ") is greater than the tolerance: " << imag(energy) << "!";
+				//}
+				bands[ii].emplace_back((energy));	
 			}
 		}
 	}

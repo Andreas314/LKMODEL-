@@ -7,6 +7,7 @@
 #include <vector>
 #include <set>
 #include <iostream>
+#include <stdexcept>
 #include "Hamiltonian_functions_real.h"
 #include "Wrappers.h"
 #include "Optical_Matrix.h"
@@ -18,9 +19,32 @@ optical_matrix::optical_matrix(hamiltonian &input): MyHamiltonian(move(input)), 
 	assemble_px();
 	assemble_py();
 	assemble_pz();
-	compute_p();
 }
 optical_matrix::~optical_matrix() = default;
+
+void optical_matrix::get_p(int n, unique_ptr<double[]> &input){
+	if (n < 0 && n > 3){
+		throw runtime_error("Error: Bad index for optical matrices, n has to be between 0 and 2");
+	}
+	vector<unique_ptr<double[]> *> matrices = {&px, &py, &pz};
+	for (int ii = 0; ii < 256; ++ii){
+		input[ii] = (*(matrices[n]))[ii];
+	}
+	if (n == 0){
+		assemble_px();
+	}
+	else if (n == 1){
+		assemble_py();
+	}
+	else if (n == 2){
+		assemble_pz();
+	}
+}
+
+void optical_matrix::compute_at_kpoint(double kx, double ky, double kz){
+	MyHamiltonian.diagonal_at_k_point(kx, ky, kz);
+	compute_p();
+}
 
 
 

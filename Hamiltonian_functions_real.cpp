@@ -19,10 +19,11 @@ using c_d = complex<double>;
 
 map<string,double> hamiltonian::parameters={};
 set<string> hamiltonian::expected_parameters = {"m_c*", "gamma_1^l", "gamma_2^l", "gamma_3^l", "delta_so", "e_g", "e_v", "e_c", "a", "e_p"};
-set<string> hamiltonian::extra_parameters={"begin", "end"};
+set<string> hamiltonian::extra_parameters={"begin", "end", "kmesh", "bz_part"};
 string hamiltonian::filename;
 
 hamiltonian::hamiltonian(string filename_1) : size(8),values(make_unique<double[]>(4 * size * size)), eigen_vals(make_unique<double[]>(2 * size)){
+	info = false;
 	if (parameters.empty()){
 		filename = filename_1;
 		read_values(filename_1);
@@ -33,24 +34,54 @@ hamiltonian::hamiltonian(): size(8),values(make_unique<double[]>(size * size)), 
 		throw runtime_error("Error: No file to read form!");
 	}
 }
-hamiltonian::~hamiltonian(){}
+hamiltonian::~hamiltonian()=default;
 
 hamiltonian::hamiltonian(hamiltonian &&other):
 	eigen_vals(move(other.eigen_vals)),
 	values(move(other.values)){
 	size = other.size;
+	info = other.info;
 	}
 
 void hamiltonian::diagonal_at_k_point(double kx, double ky, double kz){
 	assemble(kx, ky, kz);
+	info = true;
 	Eigens_Symm_Wrapper(values, eigen_vals, 2 * size);
 }
+
+void hamiltonian::make_trans_matrix(unique_ptr<double[]>& array){
+	if (!info){
+		cout << "Warning: Eigenvalues and eigenvectors have not been computed yet!" << "\n";
+	}
+	for (int ii = 0; ii < 4 * size * size; ++ii){
+			int vector = ii % (2 * size);
+			int element = ii / (2 * size);
+			int index = 2 * size * vector + element;
+			array[index] = values[ii];
+	}
+}
+
+void hamiltonian::make_trans_matrix_T(unique_ptr<double[]>& array){
+	if (!info){
+		cout << "Warning: Eigenvalues and eigenvectors have not been computed yet!" << "\n";
+	}
+	for (int ii = 0; ii < 4 * size * size; ++ii){
+			array[ii] = values[ii];
+		}
+}
+
 void hamiltonian::get_vector(int n, unique_ptr<double[]>& array){
+	if (!info){
+		cout << "Warning: Eigenvalues and eigenvectors have not been computed yet!" << "\n";
+	}
 	for (int ii = 0; ii < 2 * size; ii++){
 		array[ii] = values[ii * size + n];
 	}
 }
 double hamiltonian::get_value(int n){
+	if (!info){
+		cout << "Warning: Eigenvalues and eigenvectors have not been computed yet!" << "\n";
+	}
 	return eigen_vals[n];
 }
 

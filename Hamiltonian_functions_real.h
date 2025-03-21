@@ -16,6 +16,8 @@ public:
 	~hamiltonian();
 	hamiltonian(hamiltonian &&other);
 	void diagonal_at_k_point(double kx, double ky, double kz);
+	void make_trans_matrix(std::unique_ptr<double[]>& array);
+	void make_trans_matrix_T(std::unique_ptr<double[]>& array);
 	void get_vector(int n, std::unique_ptr<double[]>& array);
        	double get_value(int n);
 	std::string get_filename();
@@ -39,5 +41,6 @@ private:
 	static std::string filename; 
 	std::unique_ptr<double[]> values;
 	std::unique_ptr<double[]> eigen_vals;
+	bool info;
 
 };

@@ -5,7 +5,8 @@ class optical_matrix{
 	public:
 		optical_matrix(hamiltonian &Input);
 		~optical_matrix();
-		void get_px();
+		void compute_at_kpoint(double kx, double ky, double kz);
+		void get_p(int n, std::unique_ptr<double[]> &input);
 	private:
 		void compute_p();
 		void copy_buffer(std::unique_ptr<double[]> &to, std::unique_ptr<double[]> &from);

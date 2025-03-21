@@ -97,28 +97,29 @@ void Matmul_Wrapper(unique_ptr<T[]>& A, unique_ptr<T[]>& B, unique_ptr<T[]>& res
 template<>
 void Matmul_Wrapper(unique_ptr<double[]>& A, unique_ptr<double[]>& B, unique_ptr<double[]>& result,int Rows_A, int Col_A, int Col_B, double alpha){
 	char Switch = 'N';
-	double beta = 1.0;
-	dgemm_(&Switch, &Switch, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
+	char Switch_1 = 'N';
+	double beta = 0.0;
+	dgemm_(&Switch, &Switch_1, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
 }
 //implementation for float
 template<>
 void Matmul_Wrapper(unique_ptr<float[]>& A, unique_ptr<float[]>& B, unique_ptr<float[]>& result,int Rows_A, int Col_A, int Col_B, float alpha){
 	char Switch = 'N';
-	float beta = 1.0;
+	float beta = 0.0;
 	sgemm_(&Switch, &Switch, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
 }
 //implementation for complex<float>
 template<>
 void Matmul_Wrapper(unique_ptr<complex<float>[]>& A, unique_ptr<complex<float>[]>& B, unique_ptr<complex<float>[]>& result,int Rows_A, int Col_A, int Col_B, complex<float> alpha){
 	char Switch = 'N';
-	complex<float> beta = 1.0;
+	complex<float> beta = 0.0;
 	cgemm_(&Switch, &Switch, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
 }
 //implementation for complex<double>
 template<>
 void Matmul_Wrapper(unique_ptr<complex<double>[]>& A, unique_ptr<complex<double>[]>& B, unique_ptr<complex<double>[]>& result,int Rows_A, int Col_A, int Col_B, complex<double> alpha){
 	char Switch = 'N';
-	complex<double> beta = 1.0;
+	complex<double> beta = 0.0;
 	zgemm_(&Switch, &Switch, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
 }
 template<typename T>

@@ -91,7 +91,7 @@ string hamiltonian::get_filename(){
 	return filename;
 }
 double hamiltonian::get_lattice_const(){
-	return parameters["a"];
+	return parameters["a"]*pow(10,-9);
 }
 int hamiltonian::get_size(){
 	return size;

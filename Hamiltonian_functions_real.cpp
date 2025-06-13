@@ -96,6 +96,9 @@ double hamiltonian::get_lattice_const(){
 int hamiltonian::get_size(){
 	return size;
 }
+double hamiltonian::get_ep(){
+	return (double)parameters["e_p"];
+}
 void hamiltonian::print_ham(){
 	cout << "\n";
 	for (int ii = 0; ii < 256; ii++){

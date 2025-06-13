@@ -62,19 +62,18 @@ void make_kmesh(hamiltonian &Ham, vector<array<double, 3>> &kpoints){
 		}
 	}
 	kpoints.reserve(kmesh_size[0] * kmesh_size[1] * kmesh_size[2]);
-	double lattice = Ham.get_lattice_const();
-	recciprocal_vectors[0] = {2 * pi_my / lattice * bz_part[0], 0, 0};
-	recciprocal_vectors[1] = {0 , 2 * pi_my / lattice * bz_part[1], 0};
-	recciprocal_vectors[2] = {0, 0,  2 * pi_my / lattice * bz_part[2]};
+	recciprocal_vectors[0] = {bz_part[0], 0, 0};
+	recciprocal_vectors[1] = {0 ,bz_part[1], 0};
+	recciprocal_vectors[2] = {0, 0, bz_part[2]};
 	array<double, 3> point, offset;
 	for (int ii = 0; ii < 3; ++ii){
 		offset[ii] = 1/kmesh_size[0] * recciprocal_vectors[0][ii];
 		offset[ii] += 1/kmesh_size[1] * recciprocal_vectors[1][ii];
 		offset[ii] += 1/kmesh_size[2] * recciprocal_vectors[2][ii];
 	}
-	for (int ii = -kmesh_size[0] /2 ; ii < kmesh_size[0] / 2; ++ii){
-		for (int jj = -kmesh_size[1] / 2; jj < kmesh_size[1] / 2; ++jj){
-			for (int kk = -kmesh_size[2] / 2; kk < kmesh_size[2] / 2; ++kk){
+	for (int ii = -kmesh_size[0] /2 ; ii <= kmesh_size[0] / 2; ++ii){
+		for (int jj = -kmesh_size[1] / 2; jj <= kmesh_size[1] / 2; ++jj){
+			for (int kk = -kmesh_size[2] / 2; kk <= kmesh_size[2] / 2; ++kk){
 				for (int hh = 0; hh < 3; ++hh){
 					point[hh] = ii / (double)kmesh_size[0] * recciprocal_vectors[0][hh];
 					point[hh] += jj / (double)kmesh_size[1] * recciprocal_vectors[1][hh];

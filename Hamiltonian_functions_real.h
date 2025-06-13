@@ -23,6 +23,7 @@ public:
 	std::string get_filename();
 	double get_lattice_const();
 	int get_size();
+	double get_ep();
 	void print_ham();
 	static std::map<std::string, double> parameters;
 private:

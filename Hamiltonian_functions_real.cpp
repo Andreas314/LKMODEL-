@@ -84,7 +84,7 @@ double hamiltonian::get_value(int n){
 	if (!info){
 		cout << "Warning: Eigenvalues and eigenvectors have not been computed yet!" << "\n";
 	}
-	return eigen_vals[n];
+	return eigen_vals[2*n];
 }
 
 string hamiltonian::get_filename(){

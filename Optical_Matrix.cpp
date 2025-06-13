@@ -116,12 +116,6 @@ void optical_matrix::compute_p(){
 		}
 }
 
-void optical_matrix::copy_buffer(unique_ptr<complex<double>[]> &to, unique_ptr<complex<double>[]> &from){
-	for (int ii = 0; ii < 8 * 8; ++ii){
-		to[ii] = from[ii];
-	}
-}
-
 constexpr void optical_matrix::assemble_px(){
 	set<int> indices = {9, 14, 15, 24, 44, 60, 74, 75, 77, 92, 104, 120};
 	vector<double> values = {-f_2, - f_6, - f_3, f_2, - f_6, - f_3, f_6, f_3, f_2, - f_2, f_6, f_3};

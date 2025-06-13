@@ -14,7 +14,6 @@ class optical_matrix{
 		void to_complex(std::unique_ptr<double[]> &inp, std::unique_ptr<std::complex<double>[]> &output);
 		void to_complex_trans(std::unique_ptr<double[]> &inp, std::unique_ptr<std::complex<double>[]> &output);
 		void compute_p();
-		void copy_buffer(std::unique_ptr<std::complex<double>[]> &to, std::unique_ptr<std::complex<double>[]> &from);
 		constexpr void assemble_px();
 		constexpr void assemble_py();
 		constexpr void assemble_pz();

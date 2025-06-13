@@ -15,7 +15,10 @@
 using namespace std;
 
 optical_matrix::optical_matrix(hamiltonian &input): MyHamiltonian(move(input)), px(make_unique<double[]>(4 * 8 * 8)), 
-			py(make_unique<double[]>(4 * 8 * 8)), pz(make_unique<double[]>(4 * 8 * 8)){
+			py(make_unique<double[]>(4 * 8 * 8)), pz(make_unique<double[]>(4 * 8 * 8)),
+			px_complex(make_unique<complex<double>[]>(8 * 8)),
+			py_complex(make_unique<complex<double>[]>(8 * 8)),
+			pz_complex(make_unique<complex<double>[]>(8 * 8)){
 	size = MyHamiltonian.get_size();
 	assemble_px();
 	assemble_py();
@@ -46,11 +49,9 @@ void optical_matrix::get_p_complex(int n, unique_ptr<complex<double>[]> &input){
 	if (n < 0 && n > 3){
 		throw runtime_error("Error: Bad index for optical matrices, n has to be between 0 and 2");
 	}
-	vector<unique_ptr<double[]> *> matrices = {&px, &py, &pz};
-	for (int ii = 0; ii < 64; ++ii){
-		double real_part = (*(matrices[n]))[ii + (ii / 8) * 8];
-		double imaginary_part = (*(matrices[n]))[ii + (ii / 8 + 1) * 8];
-		input[ii] = real_part - 1i * imaginary_part;
+	vector<unique_ptr<complex<double>[]> *> matrices = {&px_complex, &py_complex, &pz_complex};
+	for (int ii = 0; ii< 64; ii++){
+		input[ii] = (*(matrices[n]))[ii];
 	}
 	if (n == 0){
 		assemble_px();
@@ -70,26 +71,53 @@ void optical_matrix::compute_at_kpoint(double kx, double ky, double kz){
 }
 
 double optical_matrix::get_energy(int n){
-	double energy = MyHamiltonian.get_value(2 * n);
+	double energy = MyHamiltonian.get_value(n);
 	return energy;
 }
 
+void optical_matrix::to_complex_trans(unique_ptr<double[]> &inp, unique_ptr<complex<double>[]> &output){
+	int kk = 0, n= 0;
+	for (int ii = 0; ii < 16; ++ii){
+		if (kk < 2){
+			for (int jj = 0; jj < 8; jj++){
+				double real_part = inp[ii * 16 + jj];
+				double imaginary_part = inp[ii * 16 + 8 + jj];
+				output[n * 8 + jj] = real_part + 1i * imaginary_part;
+			}
+			n++;
+		}
+		if (kk == 3){
+			kk = 0;
+			continue;
+		}
+		kk++;
+		}
+	}
+void optical_matrix::to_complex(unique_ptr<double[]> &inp, unique_ptr<complex<double>[]> &output){
+	for (int ii = 0; ii < 8; ++ii){
+		for (int jj = 0; jj < 8; jj++){
+			double real_part = inp[ii * 16 + jj];
+			double imaginary_part = inp[(ii + 8) * 16 + jj];
+			output[ii * 8 + jj] = real_part + 1i * imaginary_part;
+		}
+	}
+}
 void optical_matrix::compute_p(){
 		vector<unique_ptr<double[]> *> matrices = {&px, &py, &pz};
+		vector<unique_ptr<complex<double>[]> *> matrices_comp = {&px_complex, &py_complex, &pz_complex};
 		unique_ptr<double[]> trans_matrix = make_unique<double[]>(4 * 8 * 8);
-		unique_ptr<double[]> buffer =  make_unique<double[]>(4 * 8 * 8);
-		for (auto matrix : matrices){
+		unique_ptr<complex<double>[]> buffer =  make_unique<complex<double>[]>( 8 * 8);
+		unique_ptr<complex<double>[]> comp_trans_matrix = make_unique<complex<double>[]>(8 * 8);
+		for (auto matrix : matrices_comp){
 			MyHamiltonian.make_trans_matrix(trans_matrix);
-			Matmul_Wrapper(*matrix, trans_matrix, buffer, 16, 16, 16, 1.0);
-			copy_buffer(*matrix, buffer);
-			MyHamiltonian.make_trans_matrix_T(trans_matrix);
-			Matmul_Wrapper(trans_matrix, *matrix, buffer, 16, 16, 16, 1.0);
-			copy_buffer(*matrix, buffer);
+			to_complex_trans(trans_matrix, comp_trans_matrix);
+			Matmul_Wrapper('N', 'N', comp_trans_matrix, *matrix, buffer, 8, 8, 8, 1.0 + 0i);
+			Matmul_Wrapper('N', 'C', buffer, comp_trans_matrix, *matrix, 8, 8, 8, 1.0 + 0i);
 		}
 }
 
-void optical_matrix::copy_buffer(unique_ptr<double[]> &to, unique_ptr<double[]> &from){
-	for (int ii = 0; ii < 4 * 8 * 8; ++ii){
+void optical_matrix::copy_buffer(unique_ptr<complex<double>[]> &to, unique_ptr<complex<double>[]> &from){
+	for (int ii = 0; ii < 8 * 8; ++ii){
 		to[ii] = from[ii];
 	}
 }
@@ -108,6 +136,7 @@ constexpr void optical_matrix::assemble_px(){
 		}
 	}
 	copy_other_half(px);
+	to_complex(px, px_complex);
 }
 
 constexpr void optical_matrix::assemble_py(){
@@ -124,6 +153,7 @@ constexpr void optical_matrix::assemble_py(){
 		}
 	}
 	copy_other_half(py);
+	to_complex(py, py_complex);
 }
 
 constexpr void optical_matrix::assemble_pz(){
@@ -140,6 +170,7 @@ constexpr void optical_matrix::assemble_pz(){
 		}
 	}
 	copy_other_half(pz);
+	to_complex(pz, pz_complex);
 }
 
 void optical_matrix::copy_other_half(unique_ptr<double[]> &values){

@@ -46,14 +46,14 @@ hamiltonian::hamiltonian(hamiltonian &&other):
 void hamiltonian::diagonal_at_k_point(double kx, double ky, double kz){
 	assemble(kx, ky, kz);
 	info = true;
-	Eigens_Symm_Wrapper(values, eigen_vals, 2 * size);
+	Eigens_Symm_Wrapper(values, eigen_vals, 16);
 }
 
 void hamiltonian::make_trans_matrix(unique_ptr<double[]>& array){
 	if (!info){
 		cout << "Warning: Eigenvalues and eigenvectors have not been computed yet!" << "\n";
 	}
-	for (int ii = 0; ii < 4 * size * size; ++ii){
+	for (int ii = 0; ii < 4 * 8 * 8; ++ii){
 			int vector = ii % (2 * size);
 			int element = ii / (2 * size);
 			int index = 2 * size * vector + element;
@@ -65,9 +65,11 @@ void hamiltonian::make_trans_matrix_T(unique_ptr<double[]>& array){
 	if (!info){
 		cout << "Warning: Eigenvalues and eigenvectors have not been computed yet!" << "\n";
 	}
-	for (int ii = 0; ii < 4 * size * size; ++ii){
-			array[ii] = values[ii];
+	for (int ii = 0; ii < 16; ++ii){
+		for (int jj = 0; jj < 16; jj++){
+			array[ii * 16 + jj] =  values[ii * 16 + jj];
 		}
+	}
 }
 
 void hamiltonian::get_vector(int n, unique_ptr<double[]>& array){

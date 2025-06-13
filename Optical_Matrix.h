@@ -11,8 +11,10 @@ class optical_matrix{
 		void compute_at_kpoint(double kx, double ky, double kz);
 		double get_energy(int n);
 	private:
+		void to_complex(std::unique_ptr<double[]> &inp, std::unique_ptr<std::complex<double>[]> &output);
+		void to_complex_trans(std::unique_ptr<double[]> &inp, std::unique_ptr<std::complex<double>[]> &output);
 		void compute_p();
-		void copy_buffer(std::unique_ptr<double[]> &to, std::unique_ptr<double[]> &from);
+		void copy_buffer(std::unique_ptr<std::complex<double>[]> &to, std::unique_ptr<std::complex<double>[]> &from);
 		constexpr void assemble_px();
 		constexpr void assemble_py();
 		constexpr void assemble_pz();
@@ -22,4 +24,7 @@ class optical_matrix{
 		std::unique_ptr<double[]> px;
 		std::unique_ptr<double[]> py;
 		std::unique_ptr<double[]> pz;
+		std::unique_ptr<std::complex<double>[]> px_complex;
+		std::unique_ptr<std::complex<double>[]> py_complex;
+		std::unique_ptr<std::complex<double>[]> pz_complex;
 };

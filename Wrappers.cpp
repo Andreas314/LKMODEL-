@@ -92,35 +92,30 @@ void Eigens_Wrapper(unique_ptr<complex<double>[]>& input, unique_ptr<complex<dou
 }
 //Implementation of matrix multiplication wrapper
 template<typename T>
-void Matmul_Wrapper(unique_ptr<T[]>& A, unique_ptr<T[]>& B, unique_ptr<T[]>& result, int Rows_A, int Col_A, int Col_B, T alpha){}
+void Matmul_Wrapper(char Switch_trans_1, char Switch_trans_2, unique_ptr<T[]>& A, unique_ptr<T[]>& B, unique_ptr<T[]>& result, int Rows_A, int Col_A, int Col_B, T alpha){}
 //implementation for double
 template<>
-void Matmul_Wrapper(unique_ptr<double[]>& A, unique_ptr<double[]>& B, unique_ptr<double[]>& result,int Rows_A, int Col_A, int Col_B, double alpha){
-	char Switch = 'N';
-	char Switch_1 = 'N';
+void Matmul_Wrapper(char Switch_trans_1, char Switch_trans_2, unique_ptr<double[]>& A, unique_ptr<double[]>& B, unique_ptr<double[]>& result,int Rows_A, int Col_A, int Col_B, double alpha){
 	double beta = 0.0;
-	dgemm_(&Switch, &Switch_1, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
+	dgemm_(&Switch_trans_1, &Switch_trans_2, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
 }
 //implementation for float
 template<>
-void Matmul_Wrapper(unique_ptr<float[]>& A, unique_ptr<float[]>& B, unique_ptr<float[]>& result,int Rows_A, int Col_A, int Col_B, float alpha){
-	char Switch = 'N';
+void Matmul_Wrapper(char Switch_trans_1, char Switch_trans_2, unique_ptr<float[]>& A, unique_ptr<float[]>& B, unique_ptr<float[]>& result,int Rows_A, int Col_A, int Col_B, float alpha){
 	float beta = 0.0;
-	sgemm_(&Switch, &Switch, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
+	sgemm_(&Switch_trans_1, &Switch_trans_2, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
 }
 //implementation for complex<float>
 template<>
-void Matmul_Wrapper(unique_ptr<complex<float>[]>& A, unique_ptr<complex<float>[]>& B, unique_ptr<complex<float>[]>& result,int Rows_A, int Col_A, int Col_B, complex<float> alpha){
-	char Switch = 'N';
+void Matmul_Wrapper(char Switch_trans_1, char Switch_trans_2, unique_ptr<complex<float>[]>& A, unique_ptr<complex<float>[]>& B, unique_ptr<complex<float>[]>& result,int Rows_A, int Col_A, int Col_B, complex<float> alpha){
 	complex<float> beta = 0.0;
-	cgemm_(&Switch, &Switch, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
+	cgemm_(&Switch_trans_1, &Switch_trans_2, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
 }
 //implementation for complex<double>
 template<>
-void Matmul_Wrapper(unique_ptr<complex<double>[]>& A, unique_ptr<complex<double>[]>& B, unique_ptr<complex<double>[]>& result,int Rows_A, int Col_A, int Col_B, complex<double> alpha){
-	char Switch = 'N';
+void Matmul_Wrapper(char Switch_trans_1, char Switch_trans_2, unique_ptr<complex<double>[]>& A, unique_ptr<complex<double>[]>& B, unique_ptr<complex<double>[]>& result,int Rows_A, int Col_A, int Col_B, complex<double> alpha){
 	complex<double> beta = 0.0;
-	zgemm_(&Switch, &Switch, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
+	zgemm_(&Switch_trans_1, &Switch_trans_2, &Rows_A, &Col_B, &Col_A, &alpha, A.get(), &Rows_A, B.get(), &Col_A, &beta, result.get(), &Rows_A);
 }
 template<typename T>
 void Eigens_Symm_Wrapper(std::unique_ptr<T[]>& input, std::unique_ptr<T[]>& eigens, int dim);
@@ -138,7 +133,7 @@ void Eigens_Symm_Wrapper(std::unique_ptr<float[]>& input, std::unique_ptr<float[
 template<>
 void Eigens_Symm_Wrapper(std::unique_ptr<double[]>& input, std::unique_ptr<double[]>& eigens, int dim){
 	char JOBZ = 'V';
-	char UPLO = 'L';
+	char UPLO = 'U';
 	int LWORK = 4 * dim;
 	unique_ptr<double[]> WORK = make_unique<double[]>(LWORK);
 	int INFO;
@@ -151,10 +146,10 @@ template void Eigens_Wrapper(unique_ptr<float[]>&, unique_ptr<float[]>&, unique_
 template void Eigens_Wrapper(unique_ptr<complex<float>[]>&, unique_ptr<complex<float>[]>&, unique_ptr<complex<float>[]>&, unique_ptr<complex<float>[]>&, int);
 template void Eigens_Wrapper(unique_ptr<complex<double>[]>&, unique_ptr<complex<double>[]>&, unique_ptr<complex<double>[]>&, unique_ptr<complex<double>[]>&, int);
 //Matrix Multiplication
-template void Matmul_Wrapper(unique_ptr<float[]>&, unique_ptr<float[]>&, unique_ptr<float[]>&, int, int, int, float);
-template void Matmul_Wrapper(unique_ptr<double[]>&, unique_ptr<double[]>&, unique_ptr<double[]>&, int, int, int, double);
-template void Matmul_Wrapper(unique_ptr<complex<float>[]>&, unique_ptr<complex<float>[]>&, unique_ptr<complex<float>[]>&, int, int, int, complex<float>);
-template void Matmul_Wrapper(unique_ptr<complex<double>[]>&, unique_ptr<complex<double>[]>&, unique_ptr<complex<double>[]>&, int, int, int, complex<double>);
+template void Matmul_Wrapper(char, char, unique_ptr<float[]>&, unique_ptr<float[]>&, unique_ptr<float[]>&, int, int, int, float);
+template void Matmul_Wrapper(char, char, unique_ptr<double[]>&, unique_ptr<double[]>&, unique_ptr<double[]>&, int, int, int, double);
+template void Matmul_Wrapper(char, char, unique_ptr<complex<float>[]>&, unique_ptr<complex<float>[]>&, unique_ptr<complex<float>[]>&, int, int, int, complex<float>);
+template void Matmul_Wrapper(char, char, unique_ptr<complex<double>[]>&, unique_ptr<complex<double>[]>&, unique_ptr<complex<double>[]>&, int, int, int, complex<double>);
 
 void Eigens_Symm_Wrapper(std::unique_ptr<float[]>&, std::unique_ptr<float[]>&, int);
 void Eigens_Symm_Wrapper(std::unique_ptr<double[]>&, std::unique_ptr<double[]>&, int);

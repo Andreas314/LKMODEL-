@@ -7,86 +7,94 @@
 #include <cmath>
 #include <utility>
 #include <vector>
+#include <array>
 #include <set>
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
 #include <complex>
 #include "Hamiltonian_functions_real.h"
 #include "Wrappers.h"
 #include "Optical_Matrix.h"
+#include "KMesh.h"
+#include "Sum.h"
 using namespace std;
-typedef <array<array<array<double, 3>,6>,3> tensor;
+typedef array<array<array<complex<double>, 3>,6>,3> tensor;
 
-tensor make_qi_tensor(){
+vector<tensor> make_qi_tensor(){
 	vector<tensor> result;
 	array<double, 3> omegas;
 	read_omegas(omegas);
-	int num_omegas = floor((omega[1] - omega[0]) / omega[2]);
+	int num_omegas = floor((omegas[1] - omegas[0]) / omegas[2]) + 1;
 	result.reserve(num_omegas);
+	double omega = omegas[0];
 
 	int ii = 0;
-	double omega = omegas[0];
-	array<array<int, 2>, 6> symm_ind = {{1,1}, {2,2}, {3,3}, {3,2}, {3,1}, {2,1}};
+	array<array<int, 2>, 6> symm_ind = {{ {{1,1}}, {{2,2}}, {{3,3}}, {{3,2}}, {{3,1}}, {{2,1}} }};
 	array<int, 6> valence_ind = {2,3,4,6,7,8};
 	array<int, 2> conduction_ind = {1,5};
 	
 	hamiltonian Ham("INPUT.txt");
 	double Ep = Ham.get_ep();
-	double lat = Ham.get_lattice();
+	double lattice = Ham.get_lattice_const();
 	vector<array<double, 3>> kpoints;
 	make_kmesh(Ham, kpoints);	
 	optical_matrix Opt(Ham);
-	double dk = pow(kpoints[0][0] - kpoints[1][0], 2);
+	double delta = pow(kpoints[0][0] - kpoints[1][0], 2);
 	delta += pow(kpoints[0][1] - kpoints[1][1], 2);
 	delta += pow(kpoints[0][2] - kpoints[1][2], 2);
-	delta = sqrt(dk);
+	delta = sqrt(delta);
 
 	unique_ptr<complex<double>[]> px = make_unique<complex<double>[]>(64);
 	unique_ptr<complex<double>[]> py = make_unique<complex<double>[]>(64);
 	unique_ptr<complex<double>[]> pz = make_unique<complex<double>[]>(64);
 
-	Vk = pow(PI / lat * kpoints[0][0], 3) / kpoints.size();
-	P = sqrt(E_MASS * Ep * E_CHARGE / 2)
-	prefactor = Vk / pow(E_MASS, 4) * 2 / pow(PI, 2) * E_CHARGE / (PLANC) * pow(P, 4) ;
+	double Vk = pow(PI / lattice * kpoints[0][0], 3) / kpoints.size();
+	double P = sqrt(E_MASS * Ep * E_CHARGE / 2);
+	double prefactor = Vk / pow(E_MASS, 4) * 2 / pow(PI, 2) * E_CHARGE / (PLANC) * pow(P, 4) ;
+	cout << omega << endl << omegas[1];
 	while (omega < omegas[1]){
 		tensor current_tensor;
 		for (int a1 = 0; a1 < 3; a1++){ //loop over indicies
 			for (int a2 = 0; a2 < 6; a2++){
 				for (int a3 = 0; a3 < 3; a3++){
-					ind_1 = symm_ind[a2][0];
-					ind_2 = symm_ind[a2][1];
-					tensor[a1][a2][a3] = 0;
+					int ind1 = symm_ind[a2][0];
+					int ind2 = symm_ind[a2][1];
+					result[ii][a1][a2][a3] = 0;
 					for (auto kpoint : kpoints){
-						Opt.compute_at_k_point(kpoint[0], kpoint[1], kpoint[2]);
+						double norm = sqrt(pow(kpoint[0],2)+
+								pow(kpoint[1],2) + pow(kpoint[2],2));
+						Opt.compute_at_kpoint(kpoint[0], kpoint[1], kpoint[2]);
 						Opt.get_p_complex(0, px);
 						Opt.get_p_complex(1, py);
 						Opt.get_p_complex(2, pz);
 						vector<unique_ptr<complex<double>[]> *> p = {&px, &py, &pz};
-						double sigma = make_sigma(delta, kpoint, lattice);
+						double sigma = make_sigma(delta, norm, lattice);
 						for (int b1 = 0; b1 < 6; b1 ++){ //loop over bands
-							valence = valence_ind[b1];
-							E_val = Opt.get_energy[valence];
-							for (b2 = 0; b2 < 2; b2++){
-								cond = conduction_ind[b2];
-								E_cond = Opt.get_energy[cond];
-								omega_cv = (E_cond - E_val) / (PLANC);
-								omega_cv_1 = (E_cond + E_val) / (PLANC);
+							double valence = valence_ind[b1];
+							double E_val = Opt.get_energy(valence);
+							for (int b2 = 0; b2 < 2; b2++){
+								double cond = conduction_ind[b2];
+								double E_cond = Opt.get_energy(cond);
+								double omega_cv = (E_cond - E_val) / (PLANC);
+								double omega_cv_1 = (E_cond + E_val) / (PLANC);
 
 								double weight = gauss(omega_cv, 2 * omega, sigma);
-								for (b3 = 0; b3 < 8; b3++){
-									E_inter = Opt.get_energy[b3];
-									omega_i = E_inter / (PLANC) * E_CHARGE;
-									double denom = pow(omega_cv , 3) * (omega_i - omega_cv_1);
-									double num = (*(p[a1])[cond * 8 + cond] - *(p[a1])[valence * 8 + valence]);
-									num *= *(p[ind1])[valence * 8 + b3] * *(p[ind2])[b3 * 8 + cond] + *(p[ind2])[valence * 8 + b3] * *(p[ind1])[b3 * 8 + cond];
-									num *= *(p[a3])[cond * 8 + valence];
-									double frac = prefactor * 1i * denom / num * weight;
-									tensor[a1][a2][a3] += frac;
+								for (int b3 = 0; b3 < 8; b3++){
+									double E_inter = Opt.get_energy(b3);
+									double omega_i = E_inter / (PLANC) * E_CHARGE;
+									complex<double> denom = pow(omega_cv , 3) * (omega_i - omega_cv_1);
+									complex<double> num = (*(p[a1]))[cond * 8 + cond] - (*(p[a1]))[valence * 8 + valence];
+									num *= (*(p[ind1]))[valence * 8 + b3] * (*(p[ind2]))[b3 * 8 + cond] +
+									       	(*(p[ind2]))[valence * 8 + b3] * (*(p[ind1]))[b3 * 8 + cond];
+									num *= (*(p[a3]))[cond * 8 + valence];
+									complex<double> frac = prefactor * 1i * denom / num * weight;
+									result[ii][a1][a2][a3] += frac;
 								}
 							}
 						}
 					}
-				cout << tensor[a1][a2][a3];	
+				cout << result[ii][a1][a2][a3];	
 				}
 			}
 		}
@@ -94,14 +102,15 @@ tensor make_qi_tensor(){
 		ii++;
 		omega += ii * omegas[2];
 	}
-		
+	return result;
 }
 
+
 void read_omegas(array<double, 3>& inp){
-	ifstream input_file('INPUT.txt');
+	ifstream input_file("INPUT.txt");
 	if (input_file.is_open()){
 		string line;
-		int counter;
+		int counter = 0;
 		while(getline(input_file, line)){
 			stringstream ss(line);
 			string keyword, bin, value;

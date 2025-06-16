@@ -19,7 +19,7 @@ using c_d = complex<double>;
 
 map<string,double> hamiltonian::parameters={};
 set<string> hamiltonian::expected_parameters = {"m_c*", "gamma_1^l", "gamma_2^l", "gamma_3^l", "delta_so", "e_g", "e_v", "e_c", "a", "e_p"};
-set<string> hamiltonian::extra_parameters={"begin", "end", "kmesh", "bz_part"};
+set<string> hamiltonian::extra_parameters={"begin", "end", "kmesh", "bz_part", "omega_start", "omega_end", "omega_step"};
 string hamiltonian::filename;
 
 hamiltonian::hamiltonian(string filename_1) : size(8),values(make_unique<double[]>(4 * size * size)), eigen_vals(make_unique<double[]>(2 * size)){

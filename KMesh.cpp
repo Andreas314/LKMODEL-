@@ -33,7 +33,7 @@ void tolower_string(string &input){
 		c = tolower(c);
 	}
 }
-void make_kmesh(hamiltonian &Ham, vector<array<double, 3>> &kpoints){
+double make_kmesh(hamiltonian &Ham, vector<array<double, 3>> &kpoints){
 	string filename = Ham.get_filename(), line;
 	ifstream open_file(filename);
 	string keyword;
@@ -78,12 +78,13 @@ void make_kmesh(hamiltonian &Ham, vector<array<double, 3>> &kpoints){
 					point[hh] = ii / (double)kmesh_size[0] * recciprocal_vectors[0][hh];
 					point[hh] += jj / (double)kmesh_size[1] * recciprocal_vectors[1][hh];
 					point[hh] += kk / (double)kmesh_size[2] * recciprocal_vectors[2][hh];
-					point[hh] += offset[hh];
+					//point[hh] += offset[hh];
 				}
 				kpoints.emplace_back(point);
 			}
 		}
 	}
+	return bz_part[0];
 
 	
 }

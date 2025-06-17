@@ -13,6 +13,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <complex>
+#include <omp.h>
 #include "Hamiltonian_functions_real.h"
 #include "Wrappers.h"
 #include "Optical_Matrix.h"
@@ -54,6 +55,7 @@ vector<tensor> make_qi_tensor(){
 	double Vk = abs(pow(2 * PI / lattice * bz_part , 3)) / size;
 	double P = sqrt(E_MASS * Ep * E_CHARGE / 2);
 	double prefactor = Vk / pow(E_MASS, 4) * 2 / pow(PI, 2) * E_CHARGE / pow(PLANC, 3) * pow(P, 4) ;
+	complex<double> part_sum = 0;
 	while (omega < omegas[1]){
 		tensor current_tensor;
 		for (int a1 = 0; a1 < 3; a1++){ //loop over indicies
@@ -63,8 +65,9 @@ vector<tensor> make_qi_tensor(){
 				}
 			}
 		}
-		double sum=0;
-		for (auto kpoint : kpoints){
+		#pragma omp parallel for shared(omega, current_tensor) firstprivate(Opt, part_sum)
+		for (int kk = 0; kk < kpoints.size(); kk++  ){
+			auto kpoint = kpoints[kk];
 			Opt.compute_at_kpoint(kpoint[0], kpoint[1], kpoint[2]);
 			Opt.get_p_complex(0, px);
 			Opt.get_p_complex(1, py);
@@ -93,10 +96,12 @@ vector<tensor> make_qi_tensor(){
 									       	(*(p[ind2]))[valence * 8 + b3] * (*(p[ind1]))[b3 * 8 + cond]) / 2.0;
 									num *= (*(p[a3]))[cond * 8 + valence];
 									complex<double> frac = prefactor * 1i * num / denom * weight;
-									current_tensor[a1][a2][a3] += frac;
+									part_sum+=frac;
 								}
 							}
 						}
+						current_tensor[a1][a2][a3] = current_tensor[a1][a2][a3] + part_sum;
+						part_sum = 0;
 					}
 				}
 			}

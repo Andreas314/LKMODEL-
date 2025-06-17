@@ -29,12 +29,22 @@ hamiltonian::hamiltonian(string filename_1) : size(8),values(make_unique<double[
 		read_values(filename_1);
 	}
 }
-hamiltonian::hamiltonian(): size(8),values(make_unique<double[]>(size * size)), eigen_vals(make_unique<double[]>(size)){
+hamiltonian::hamiltonian(): size(8),values(make_unique<double[]>(4 * size * size)), eigen_vals(make_unique<double[]>(2 * size)){
 	if (parameters.empty()){
 		throw runtime_error("Error: No file to read form!");
 	}
 }
 hamiltonian::~hamiltonian()=default;
+hamiltonian::hamiltonian(const hamiltonian& ham): size(8),values(make_unique<double[]>(4 * size * size)), eigen_vals(make_unique<double[]>(2 * size))
+{
+	info = ham.info;
+	for (int ii = 0; ii < 4 * size * size; ii++){
+		values[ii] = ham.values[ii];
+	}
+	for (int ii = 0; ii < 2 * size; ii++){
+		eigen_vals[ii] = ham.eigen_vals[ii];
+	}
+}
 
 hamiltonian::hamiltonian(hamiltonian &&other):
 	eigen_vals(move(other.eigen_vals)),
@@ -42,6 +52,17 @@ hamiltonian::hamiltonian(hamiltonian &&other):
 	size = other.size;
 	info = other.info;
 	}
+hamiltonian& hamiltonian::operator=(const hamiltonian& ham) {
+	size = ham.size;
+	info = ham.info;
+	for (int ii = 0; ii < 4 * size * size; ii++){
+		values[ii] = ham.values[ii];
+	}
+	for (int ii = 0; ii < 2 * size; ii++){
+		eigen_vals[ii] = ham.eigen_vals[ii];
+	}
+    	return *this;
+}
 
 void hamiltonian::diagonal_at_k_point(double kx, double ky, double kz){
 	assemble(kx, ky, kz);

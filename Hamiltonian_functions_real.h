@@ -15,6 +15,8 @@ public:
 	hamiltonian(std::string filename_1);
 	~hamiltonian();
 	hamiltonian(hamiltonian &&other);
+	hamiltonian(const hamiltonian &ham);
+	hamiltonian& operator=(const hamiltonian& ham);
 	void diagonal_at_k_point(double kx, double ky, double kz);
 	void make_trans_matrix(std::unique_ptr<double[]>& array);
 	void make_trans_matrix_T(std::unique_ptr<double[]>& array);

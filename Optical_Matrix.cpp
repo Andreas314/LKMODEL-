@@ -26,6 +26,20 @@ optical_matrix::optical_matrix(hamiltonian &input): MyHamiltonian(move(input)), 
 }
 optical_matrix::~optical_matrix() = default;
 
+optical_matrix::optical_matrix(const optical_matrix& opt){
+	MyHamiltonian = opt.MyHamiltonian;
+	size = opt.size;
+	for (int ii = 0; ii < 4 * 8 * 8; ii++){
+		px[ii] = opt.px[ii];
+		py[ii] = opt.py[ii];
+		pz[ii] = opt.pz[ii];
+	}
+	for (int ii = 0; ii < 2 * 8; ii++){
+		px_complex[ii] = opt.px_complex[ii];
+		py_complex[ii] = opt.py_complex[ii];
+		pz_complex[ii] = opt.pz_complex[ii];
+	}
+}
 void optical_matrix::get_p(int n, unique_ptr<double[]> &input){
 	if (n < 0 && n > 3){
 		throw runtime_error("Error: Bad index for optical matrices, n has to be between 0 and 2");

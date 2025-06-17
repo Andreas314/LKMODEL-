@@ -26,15 +26,20 @@ optical_matrix::optical_matrix(hamiltonian &input): MyHamiltonian(move(input)), 
 }
 optical_matrix::~optical_matrix() = default;
 
-optical_matrix::optical_matrix(const optical_matrix& opt){
-	MyHamiltonian = opt.MyHamiltonian;
+optical_matrix::optical_matrix(const optical_matrix& opt):px(make_unique<double[]>(4 * 8 * 8)), 
+			py(make_unique<double[]>(4 * 8 * 8)), pz(make_unique<double[]>(4 * 8 * 8)),
+			px_complex(make_unique<complex<double>[]>(8 * 8)),
+			py_complex(make_unique<complex<double>[]>(8 * 8)),
+			pz_complex(make_unique<complex<double>[]>(8 * 8))
+{
+	hamiltonian MyHamiltonian = opt.MyHamiltonian;
 	size = opt.size;
 	for (int ii = 0; ii < 4 * 8 * 8; ii++){
 		px[ii] = opt.px[ii];
 		py[ii] = opt.py[ii];
 		pz[ii] = opt.pz[ii];
 	}
-	for (int ii = 0; ii < 2 * 8; ii++){
+	for (int ii = 0; ii < 8 * 8; ii++){
 		px_complex[ii] = opt.px_complex[ii];
 		py_complex[ii] = opt.py_complex[ii];
 		pz_complex[ii] = opt.pz_complex[ii];

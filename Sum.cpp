@@ -68,6 +68,7 @@ vector<tensor> make_qi_tensor(){
 		#pragma omp parallel for shared(omega, current_tensor) firstprivate(Opt, part_sum)
 		for (int kk = 0; kk < kpoints.size(); kk++  ){
 			auto kpoint = kpoints[kk];
+			tensor local_tensor;
 			Opt.compute_at_kpoint(kpoint[0], kpoint[1], kpoint[2]);
 			Opt.get_p_complex(0, px);
 			Opt.get_p_complex(1, py);
@@ -100,12 +101,23 @@ vector<tensor> make_qi_tensor(){
 								}
 							}
 						}
-						current_tensor[a1][a2][a3] = current_tensor[a1][a2][a3] + part_sum;
+						local_tensor[a1][a2][a3] = local_tensor[a1][a2][a3] + part_sum;
 						part_sum = 0;
 					}
 				}
 			}
+		#pragma omp critical
+	   	 {
+        	for (int a1 = 0; a1 < 3; a1++){
+            		for (int a2 = 0; a2 < 6; a2++){
+                		for (int a3 = 0; a3 < 3; a3++){
+                    			current_tensor[a1][a2][a3] += local_tensor[a1][a2][a3];
+    				}
+			}
 		}
+		 }
+		}
+
 		result.emplace_back(current_tensor);
 		cout << endl;
 		ii++;

@@ -50,7 +50,7 @@ vector<tensor> make_qi_tensor(){
 	unique_ptr<complex<double>[]> py = make_unique<complex<double>[]>(64);
 	unique_ptr<complex<double>[]> pz = make_unique<complex<double>[]>(64);
 
-	double sigma = make_sigma(delta,lattice) /5 ;
+	double sigma = make_sigma(delta,lattice) / 5 ;
 	double size = kpoints.size();
 	double Vk = abs(pow(2 * PI / lattice * bz_part , 3)) / size;
 	double P = sqrt(E_MASS * Ep * E_CHARGE / 2);

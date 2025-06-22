@@ -130,8 +130,8 @@ void optical_matrix::compute_p(){
 		for (auto matrix : matrices_comp){
 			MyHamiltonian.make_trans_matrix(trans_matrix);
 			to_complex_trans(trans_matrix, comp_trans_matrix);
-			Matmul_Wrapper('N', 'N', comp_trans_matrix, *matrix, buffer, 8, 8, 8, 1.0 + 0i);
-			Matmul_Wrapper('N', 'C', buffer, comp_trans_matrix, *matrix, 8, 8, 8, 1.0 + 0i);
+			Matmul_Wrapper('C', 'N', comp_trans_matrix, *matrix, buffer, 8, 8, 8, 1.0 + 0i);
+			Matmul_Wrapper('N', 'N', buffer, comp_trans_matrix, *matrix, 8, 8, 8, 1.0 + 0i);
 		}
 }
 

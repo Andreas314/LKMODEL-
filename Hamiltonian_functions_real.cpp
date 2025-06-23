@@ -18,7 +18,7 @@ using namespace std;
 using c_d = complex<double>;
 
 map<string,double> hamiltonian::parameters={};
-set<string> hamiltonian::expected_parameters = {"m_c*", "gamma_1^l", "gamma_2^l", "gamma_3^l", "delta_so", "e_g", "e_v", "e_c", "a", "e_p"};
+set<string> hamiltonian::expected_parameters = {"m_c*", "gamma_1^l", "gamma_2^l", "gamma_3^l", "delta_so", "e_g", "e_v", "a", "e_p"};
 set<string> hamiltonian::extra_parameters={"begin", "end", "kmesh", "bz_part", "omega_start", "omega_end", "omega_step"};
 string hamiltonian::filename;
 
@@ -29,12 +29,22 @@ hamiltonian::hamiltonian(string filename_1) : size(8),values(make_unique<double[
 		read_values(filename_1);
 	}
 }
-hamiltonian::hamiltonian(): size(8),values(make_unique<double[]>(size * size)), eigen_vals(make_unique<double[]>(size)){
+hamiltonian::hamiltonian(): size(8),values(make_unique<double[]>(4 * size * size)), eigen_vals(make_unique<double[]>(2 * size)){
 	if (parameters.empty()){
 		throw runtime_error("Error: No file to read form!");
 	}
 }
 hamiltonian::~hamiltonian()=default;
+hamiltonian::hamiltonian(const hamiltonian& ham): size(8),values(make_unique<double[]>(4 * size * size)), eigen_vals(make_unique<double[]>(2 * size))
+{
+	info = ham.info;
+	for (int ii = 0; ii < 4 * size * size; ii++){
+		values[ii] = ham.values[ii];
+	}
+	for (int ii = 0; ii < 2 * size; ii++){
+		eigen_vals[ii] = ham.eigen_vals[ii];
+	}
+}
 
 hamiltonian::hamiltonian(hamiltonian &&other):
 	eigen_vals(move(other.eigen_vals)),
@@ -42,6 +52,17 @@ hamiltonian::hamiltonian(hamiltonian &&other):
 	size = other.size;
 	info = other.info;
 	}
+hamiltonian& hamiltonian::operator=(const hamiltonian& ham) {
+	size = ham.size;
+	info = ham.info;
+	for (int ii = 0; ii < 4 * size * size; ii++){
+		values[ii] = ham.values[ii];
+	}
+	for (int ii = 0; ii < 2 * size; ii++){
+		eigen_vals[ii] = ham.eigen_vals[ii];
+	}
+    	return *this;
+}
 
 void hamiltonian::diagonal_at_k_point(double kx, double ky, double kz){
 	assemble(kx, ky, kz);
@@ -123,7 +144,7 @@ void hamiltonian::assemble(double kx, double ky, double kz){
 	double E_g = parameters["e_g"];
 	double m_eff = parameters["m_c*"];
 	double E_v = parameters["e_v"];
-	double E_c = parameters["e_c"];
+	double E_c = E_v + E_g;
 	double a = parameters["a"];
 	double delta_so = parameters["delta_so"];
 	// input  E_p[eV]

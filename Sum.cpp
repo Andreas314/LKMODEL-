@@ -13,6 +13,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <complex>
+#include <omp.h>
 #include "Hamiltonian_functions_real.h"
 #include "Wrappers.h"
 #include "Optical_Matrix.h"
@@ -39,21 +40,23 @@ vector<tensor> make_qi_tensor(){
 	double lattice = Ham.get_lattice_const();
 	vector<array<double, 3>> kpoints;
 	double bz_part = make_kmesh(Ham, kpoints);	
-	optical_matrix Opt(Ham);
+	optical_matrix Opt(Ham);	
 	double delta = pow(kpoints[0][0] - kpoints[1][0], 2);
-	delta += pow(kpoints[0][1] - kpoints[1][1], 2);
-	delta += pow(kpoints[0][2] - kpoints[1][2], 2);
-	delta = sqrt(delta);
+        delta += pow(kpoints[0][1] - kpoints[1][1], 2);
+        delta += pow(kpoints[0][2] - kpoints[1][2], 2);
+        delta = sqrt(delta);
 
 	unique_ptr<complex<double>[]> px = make_unique<complex<double>[]>(64);
 	unique_ptr<complex<double>[]> py = make_unique<complex<double>[]>(64);
 	unique_ptr<complex<double>[]> pz = make_unique<complex<double>[]>(64);
 
-	double sigma = make_sigma(delta,lattice) /5 ;
+	double sigma = make_sigma(delta,lattice) / 5;
 	double size = kpoints.size();
-	double Vk = abs(pow(2 * PI / lattice * bz_part , 3)) / size;
+	//double Vk = 4 * PI / 3 * abs(pow(PI / lattice * bz_part, 3)) / size;
+	double Vk = pow(delta * 2 * PI / lattice, 3);
 	double P = sqrt(E_MASS * Ep * E_CHARGE / 2);
 	double prefactor = Vk / pow(E_MASS, 4) * 2 / pow(PI, 2) * E_CHARGE / pow(PLANC, 3) * pow(P, 4) ;
+	complex<double> part_sum = 0;
 	while (omega < omegas[1]){
 		tensor current_tensor;
 		for (int a1 = 0; a1 < 3; a1++){ //loop over indicies
@@ -63,8 +66,11 @@ vector<tensor> make_qi_tensor(){
 				}
 			}
 		}
-		double sum=0;
-		for (auto kpoint : kpoints){
+		#pragma omp parallel for shared(omega, current_tensor) firstprivate(Opt, part_sum)
+		for (int kk = 0; kk < kpoints.size(); kk++  ){
+			auto kpoint = kpoints[kk];
+			//cout << kpoint [0] << ' ' << kpoint[1] << ' ' << kpoint[2] << endl;
+			tensor local_tensor;
 			Opt.compute_at_kpoint(kpoint[0], kpoint[1], kpoint[2]);
 			Opt.get_p_complex(0, px);
 			Opt.get_p_complex(1, py);
@@ -93,14 +99,27 @@ vector<tensor> make_qi_tensor(){
 									       	(*(p[ind2]))[valence * 8 + b3] * (*(p[ind1]))[b3 * 8 + cond]) / 2.0;
 									num *= (*(p[a3]))[cond * 8 + valence];
 									complex<double> frac = prefactor * 1i * num / denom * weight;
-									current_tensor[a1][a2][a3] += frac;
+									part_sum+=frac;
 								}
 							}
 						}
+						local_tensor[a1][a2][a3] = local_tensor[a1][a2][a3] + part_sum;
+						part_sum = 0;
 					}
 				}
 			}
+		#pragma omp critical
+	   	 {
+        	for (int a1 = 0; a1 < 3; a1++){
+            		for (int a2 = 0; a2 < 6; a2++){
+                		for (int a3 = 0; a3 < 3; a3++){
+                    			current_tensor[a1][a2][a3] += local_tensor[a1][a2][a3];
+    				}
+			}
 		}
+		 }
+		}
+
 		result.emplace_back(current_tensor);
 		cout << endl;
 		ii++;
@@ -161,6 +180,6 @@ double make_sigma(double d_k, double lattice){
 }
 
 double gauss(double x, double x0, double sigma){
-	//return exp( -pow(x - x0, 2) / 2 / pow(sigma, 2) ) /sqrt(2 * PI) / sigma;
-	return 1 / PI * sigma / ( pow(x - x0, 2) + pow(sigma, 2));
+	return exp( -pow(x - x0, 2) / 2 / pow(sigma, 2) ) /sqrt(2 * PI) / sigma;
+	//return 1 / PI * sigma / ( pow(x - x0, 2) + pow(sigma, 2));
 }

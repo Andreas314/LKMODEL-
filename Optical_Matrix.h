@@ -6,6 +6,7 @@ class optical_matrix{
 	public:
 		optical_matrix(hamiltonian &Input);
 		~optical_matrix();
+		optical_matrix(const optical_matrix& opt);
 		void get_p(int n, std::unique_ptr<double[]> &input);
 		void get_p_complex(int n, std::unique_ptr<std::complex<double>[]> &input);
 		void compute_at_kpoint(double kx, double ky, double kz);

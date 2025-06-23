@@ -26,6 +26,25 @@ optical_matrix::optical_matrix(hamiltonian &input): MyHamiltonian(move(input)), 
 }
 optical_matrix::~optical_matrix() = default;
 
+optical_matrix::optical_matrix(const optical_matrix& opt):px(make_unique<double[]>(4 * 8 * 8)), 
+			py(make_unique<double[]>(4 * 8 * 8)), pz(make_unique<double[]>(4 * 8 * 8)),
+			px_complex(make_unique<complex<double>[]>(8 * 8)),
+			py_complex(make_unique<complex<double>[]>(8 * 8)),
+			pz_complex(make_unique<complex<double>[]>(8 * 8))
+{
+	hamiltonian MyHamiltonian = opt.MyHamiltonian;
+	size = opt.size;
+	for (int ii = 0; ii < 4 * 8 * 8; ii++){
+		px[ii] = opt.px[ii];
+		py[ii] = opt.py[ii];
+		pz[ii] = opt.pz[ii];
+	}
+	for (int ii = 0; ii < 8 * 8; ii++){
+		px_complex[ii] = opt.px_complex[ii];
+		py_complex[ii] = opt.py_complex[ii];
+		pz_complex[ii] = opt.pz_complex[ii];
+	}
+}
 void optical_matrix::get_p(int n, unique_ptr<double[]> &input){
 	if (n < 0 && n > 3){
 		throw runtime_error("Error: Bad index for optical matrices, n has to be between 0 and 2");
@@ -98,7 +117,7 @@ void optical_matrix::to_complex(unique_ptr<double[]> &inp, unique_ptr<complex<do
 		for (int jj = 0; jj < 8; jj++){
 			double real_part = inp[ii * 16 + jj];
 			double imaginary_part = inp[(ii + 8) * 16 + jj];
-			output[ii * 8 + jj] = real_part + 1i * imaginary_part;
+			output[ii * 8 + jj] = real_part - 1i * imaginary_part;
 		}
 	}
 }

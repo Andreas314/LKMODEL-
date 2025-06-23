@@ -165,7 +165,7 @@ using namespace std;
 			double kz = point[2];
 			MyHamiltonian.diagonal_at_k_point(kx, ky, kz);
 			for (int ii = 0; ii < size; ++ii){
-				double energy = MyHamiltonian.get_value(2 * ii);
+				double energy = MyHamiltonian.get_value(ii);
 				//if (imag(energy) > tol){
 				//	cout << "Warning: Imaginary part of the energy in (" << kx <<"," 
 				//		<< ky <<  "," << kz << ") is greater than the tolerance: " << imag(energy) << "!";

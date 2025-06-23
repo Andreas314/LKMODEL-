@@ -71,14 +71,14 @@ double make_kmesh(hamiltonian &Ham, vector<array<double, 3>> &kpoints){
 		offset[ii] += 1/kmesh_size[1] * recciprocal_vectors[1][ii];
 		offset[ii] += 1/kmesh_size[2] * recciprocal_vectors[2][ii];
 	}
-	for (int ii = -kmesh_size[0] /2 ; ii <= kmesh_size[0] / 2; ++ii){
-		for (int jj = -kmesh_size[1] / 2; jj <= kmesh_size[1] / 2; ++jj){
-			for (int kk = -kmesh_size[2] / 2; kk <= kmesh_size[2] / 2; ++kk){
+	for (int ii = -kmesh_size[0]  ; ii <= kmesh_size[0] ; ++ii){
+		for (int jj = -kmesh_size[1] / 2; jj <= kmesh_size[1] ; ++jj){
+			for (int kk = -kmesh_size[2] ; kk <= kmesh_size[2] ; ++kk){
 				for (int hh = 0; hh < 3; ++hh){
 					point[hh] = ii / (double)kmesh_size[0] * recciprocal_vectors[0][hh];
 					point[hh] += jj / (double)kmesh_size[1] * recciprocal_vectors[1][hh];
 					point[hh] += kk / (double)kmesh_size[2] * recciprocal_vectors[2][hh];
-					//point[hh] += offset[hh];
+					point[hh] += offset[hh];
 				}
 				kpoints.emplace_back(point);
 			}

@@ -1,0 +1,21 @@
+#General
+delta_SO =  #Delta parameter, how deep the splitoff bands is relative to the valence band in Gamma  (eV)     
+E_g =  #Bandgap (eV)
+E_v =  #Position of the apex of the valence bands (eV)
+gamma_1^L = #Luttinger parameters
+gamma_2^L = 
+gamma_3^L = 
+m_c* = #Effective mass of conduction bands (dimensionless)
+a =  #Lattice constant (nm)
+e_p = #Energy related to the Kane matrix element (eV)
+#Bandstructure
+begin 50 #Block for setting the kpath, begins with keyword begin and Number of points between respective pairs
+0 0 0 G
+1 0 0 X #A pair of points in BZ with label, total number of points must be even
+end kpath #Keyword to end the block
+#QI calcualtions
+kmesh  #three integers, set the number of kpoints (Gamma centred) around the gamma point
+bz_part #three integers, set what chunk of bz is taken into the calculation in each direction (from 0 to 1)
+omega_start = #angular frequency at which to start the calculations (Hz)
+omega_end = #where to end the calculation (Hz)
+omega_step = #step for the calculation (Hz)

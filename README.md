@@ -27,11 +27,11 @@ To compile and run LKMODEL, ensure the following dependencies are installed:
 - `BLAS`
 
 ## Compilation
-- Compile with 'make'
+- Compile with `make`
 ## Usage
-- run './lkmodel -h' to get the available options
-- lkmodel reads 'INPUT.txt' file, which contains information about the calculations
-- see 'INPUT\_ex.txt' for explanation of the INPUT.txt file
-- run './Plot.gn' to plot the band structure from 'BAND\_LKMODEL.dat'
-- run './Print\_col.sh' to show N-th column of the resulting tensor
+- run `./lkmodel -h` to get the available options
+- lkmodel reads `INPUT.txt` file, which contains information about the calculations
+- see `INPUT\_ex.txt` for explanation of the INPUT.txt file
+- run `./Plot.gn` to plot the band structure from `BAND\_LKMODEL.dat`
+- run `./Print\_col.sh` to show N-th column of the resulting tensor
 

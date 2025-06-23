@@ -67,7 +67,7 @@ void hamiltonian::make_trans_matrix_T(unique_ptr<double[]>& array){
 	}
 	for (int ii = 0; ii < 16; ++ii){
 		for (int jj = 0; jj < 16; jj++){
-			array[ii * 16 + jj] =  values[ii * 16 + jj];
+			array[ii * 16 + jj] = (values[ii * 16 + jj]);
 		}
 	}
 }

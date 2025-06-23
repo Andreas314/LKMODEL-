@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = --std=c++23 -O2
+CXXFLAGS = --std=c++23 -O3
 LDFLAGS = -llapack -lblas -fopenmp
 
 # Directories

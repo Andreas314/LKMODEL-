@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <complex>
 #include <omp.h>
+#include <iomanip>
 #include "Hamiltonian_functions_real.h"
 #include "Wrappers.h"
 #include "Optical_Matrix.h"
@@ -23,6 +24,21 @@ using namespace std;
 typedef array<array<array<complex<double>, 3>,6>,3> tensor;
 
 vector<tensor> make_qi_tensor(){
+	int val = system("touch QI_LKMODEL.dat");
+	ofstream file("QI_LKMODEL.dat");
+	file << setw(8) << left << "omega";
+	array<string, 3> coord_1 = {"x", "y", "z"};
+	array<string, 6> coord_2 = {"xx", "yy", "zz", "yz", "xz", "xy"};
+	for (int aa = 0; aa < 3; aa++){
+		for (int bb= 0; bb <  6; bb++){
+			for (int cc = 0; cc < 3; cc++){
+				string toprint = coord_1[aa] + coord_2[bb] + coord_1[cc];
+				file << setw(15) << left << toprint;
+			}
+		}
+	}
+	file << endl;
+
 	vector<tensor> result;
 	array<double, 3> omegas;
 	read_omegas(omegas);
@@ -58,6 +74,8 @@ vector<tensor> make_qi_tensor(){
 	double prefactor = Vk / pow(E_MASS, 4) * 2 / pow(PI, 2) * E_CHARGE / pow(PLANC, 3) * pow(P, 4) ;
 	complex<double> part_sum = 0;
 	while (omega < omegas[1]){
+		cout << endl;
+		file << setw(8) << setprecision(3) << left <<  omega * (PLANC);
 		tensor current_tensor;
 		for (int a1 = 0; a1 < 3; a1++){ //loop over indicies
 			for (int a2 = 0; a2 < 6; a2++){
@@ -69,7 +87,6 @@ vector<tensor> make_qi_tensor(){
 		#pragma omp parallel for shared(omega, current_tensor) firstprivate(Opt, part_sum)
 		for (int kk = 0; kk < kpoints.size(); kk++  ){
 			auto kpoint = kpoints[kk];
-			//cout << kpoint [0] << ' ' << kpoint[1] << ' ' << kpoint[2] << endl;
 			tensor local_tensor;
 			Opt.compute_at_kpoint(kpoint[0], kpoint[1], kpoint[2]);
 			Opt.get_p_complex(0, px);
@@ -119,16 +136,23 @@ vector<tensor> make_qi_tensor(){
 		}
 		 }
 		}
-
+		
 		result.emplace_back(current_tensor);
 		cout << endl;
 		ii++;
-		cout << omega * PLANC << ' ' <<  abs(current_tensor[0][0][0]) << endl;
+		cout << omega * (PLANC) << ' ' <<  abs(current_tensor[0][0][0]) << endl;
+        	for (int a1 = 0; a1 < 3; a1++){
+            		for (int a2 = 0; a2 < 6; a2++){
+                		for (int a3 = 0; a3 < 3; a3++){
+					file << setw(15) << setprecision(3) << left << current_tensor[a1][a2][a3];
+    				}
+			}
+		}
+		file << endl;
 		omega = ii * omegas[2] + omegas[0];
 	}
 	return result;
 }
-
 
 void read_omegas(array<double, 3>& inp){
 	ifstream input_file("INPUT.txt");
@@ -143,7 +167,7 @@ void read_omegas(array<double, 3>& inp){
 			ss >> value;
 			if (keyword == "omega_start"){
 				try{
-					inp[0] = stod(value);
+					inp[0] = stod(value) / (PLANC);
 				}
 				catch(invalid_argument){
 					throw runtime_error("Error: Wrong values for omega_start!");
@@ -152,7 +176,7 @@ void read_omegas(array<double, 3>& inp){
 			}
 			if (keyword == "omega_end"){
 				try{
-					inp[1] = stod(value);
+					inp[1] = stod(value) / (PLANC);
 				}
 				catch(invalid_argument){
 					throw runtime_error("Error: Wrong values for omega_end!");
@@ -161,7 +185,7 @@ void read_omegas(array<double, 3>& inp){
 			}
 			if (keyword == "omega_step"){
 				try{
-					inp[2] = stod(value);
+					inp[2] = stod(value) / (PLANC);
 				}
 				catch(invalid_argument){
 					throw runtime_error("Error: Wrong values for omega_step!");

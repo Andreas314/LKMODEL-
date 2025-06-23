@@ -18,7 +18,7 @@ using namespace std;
 using c_d = complex<double>;
 
 map<string,double> hamiltonian::parameters={};
-set<string> hamiltonian::expected_parameters = {"m_c*", "gamma_1^l", "gamma_2^l", "gamma_3^l", "delta_so", "e_g", "e_v", "e_c", "a", "e_p"};
+set<string> hamiltonian::expected_parameters = {"m_c*", "gamma_1^l", "gamma_2^l", "gamma_3^l", "delta_so", "e_g", "e_v", "a", "e_p"};
 set<string> hamiltonian::extra_parameters={"begin", "end", "kmesh", "bz_part", "omega_start", "omega_end", "omega_step"};
 string hamiltonian::filename;
 
@@ -144,7 +144,7 @@ void hamiltonian::assemble(double kx, double ky, double kz){
 	double E_g = parameters["e_g"];
 	double m_eff = parameters["m_c*"];
 	double E_v = parameters["e_v"];
-	double E_c = parameters["e_c"];
+	double E_c = E_v + E_g;
 	double a = parameters["a"];
 	double delta_so = parameters["delta_so"];
 	// input  E_p[eV]

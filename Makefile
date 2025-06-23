@@ -3,19 +3,17 @@ CXX = g++
 CXXFLAGS = --std=c++23 -O2
 LDFLAGS = -llapack -lblas -fopenmp
 
-# Source and object files
-SRC = main.cpp \
-      BandStructure.cpp \
-      Hamiltonian_functions_real.cpp \
-      KMesh.cpp \
-      Optical_Matrix.cpp \
-      Sum.cpp \
-      Wrappers.cpp
+# Directories
+SRC_DIR = src
+OBJ_DIR = obj
+BIN_DIR = .
 
-OBJ = $(SRC:.cpp=.o)
+# Sources and objects
+SRC = $(wildcard $(SRC_DIR)/*.cpp)
+OBJ = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC))
 
 # Executable name
-TARGET = lkmodel
+TARGET = $(BIN_DIR)/lkmodel
 
 # Default target
 all: $(TARGET)
@@ -24,28 +22,38 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Individual dependencies
-main.o: main.cpp Sum.h BandStructure.h KMesh.h Hamiltonian_functions_real.h Wrappers.h Optical_Matrix.h
+# Object file rules with special flags where needed
+$(OBJ_DIR)/main.o: $(SRC_DIR)/main.cpp $(SRC_DIR)/Sum.h $(SRC_DIR)/BandStructure.h $(SRC_DIR)/KMesh.h $(SRC_DIR)/Hamiltonian_functions_real.h $(SRC_DIR)/Wrappers.h $(SRC_DIR)/Optical_Matrix.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-Sum.o: Sum.cpp Sum.h BandStructure.h KMesh.h Hamiltonian_functions_real.h Wrappers.h Optical_Matrix.h
+$(OBJ_DIR)/Sum.o: $(SRC_DIR)/Sum.cpp $(SRC_DIR)/Sum.h $(SRC_DIR)/BandStructure.h $(SRC_DIR)/KMesh.h $(SRC_DIR)/Hamiltonian_functions_real.h $(SRC_DIR)/Wrappers.h $(SRC_DIR)/Optical_Matrix.h
 	$(CXX) $(CXXFLAGS) -fopenmp -c $< -o $@
 
-BandStructure.o: BandStructure.cpp BandStructure.h Hamiltonian_functions_real.h
-
-KMesh.o: KMesh.cpp KMesh.h Hamiltonian_functions_real.h
-
-Hamiltonian_functions_real.o: Hamiltonian_functions_real.cpp Hamiltonian_functions_real.h Wrappers.h
-
-Wrappers.o: Wrappers.cpp Wrappers.h
+$(OBJ_DIR)/BandStructure.o: $(SRC_DIR)/BandStructure.cpp $(SRC_DIR)/BandStructure.h $(SRC_DIR)/Hamiltonian_functions_real.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-Optical_Matrix.o: Optical_Matrix.cpp Optical_Matrix.h Wrappers.h Hamiltonian_functions_real.h
-
-# Compile all other .cpp files generically
-%.o: %.cpp
+$(OBJ_DIR)/KMesh.o: $(SRC_DIR)/KMesh.cpp $(SRC_DIR)/KMesh.h $(SRC_DIR)/Hamiltonian_functions_real.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/Hamiltonian_functions_real.o: $(SRC_DIR)/Hamiltonian_functions_real.cpp $(SRC_DIR)/Hamiltonian_functions_real.h $(SRC_DIR)/Wrappers.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/Wrappers.o: $(SRC_DIR)/Wrappers.cpp $(SRC_DIR)/Wrappers.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/Optical_Matrix.o: $(SRC_DIR)/Optical_Matrix.cpp $(SRC_DIR)/Optical_Matrix.h $(SRC_DIR)/Wrappers.h $(SRC_DIR)/Hamiltonian_functions_real.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Generic rule for remaining .cpp files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Ensure object directory exists
+$(OBJ): | $(OBJ_DIR)
+
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
 
 # Cleanup
 clean:
-	rm -f $(OBJ) $(TARGET)
-
+	rm -rf $(OBJ_DIR) $(TARGET)

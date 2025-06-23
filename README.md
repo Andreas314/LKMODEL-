@@ -27,6 +27,7 @@ To compile and run LKMODEL, ensure the following dependencies are installed:
 - `BLAS`
 
 ## Compilation
+- Download with `git clone git@github.com:Andreas314/LKMODEL-.git`
 - Compile with `make`
 ## Usage
 - run `./lkmodel -h` to get the available options

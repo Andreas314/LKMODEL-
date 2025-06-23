@@ -117,7 +117,7 @@ void optical_matrix::to_complex(unique_ptr<double[]> &inp, unique_ptr<complex<do
 		for (int jj = 0; jj < 8; jj++){
 			double real_part = inp[ii * 16 + jj];
 			double imaginary_part = inp[(ii + 8) * 16 + jj];
-			output[ii * 8 + jj] = real_part + 1i * imaginary_part;
+			output[ii * 8 + jj] = real_part - 1i * imaginary_part;
 		}
 	}
 }
@@ -128,10 +128,10 @@ void optical_matrix::compute_p(){
 		unique_ptr<complex<double>[]> buffer =  make_unique<complex<double>[]>( 8 * 8);
 		unique_ptr<complex<double>[]> comp_trans_matrix = make_unique<complex<double>[]>(8 * 8);
 		for (auto matrix : matrices_comp){
-			MyHamiltonian.make_trans_matrix(trans_matrix);
+			MyHamiltonian.make_trans_matrix_T(trans_matrix);
 			to_complex_trans(trans_matrix, comp_trans_matrix);
-			Matmul_Wrapper('C', 'N', comp_trans_matrix, *matrix, buffer, 8, 8, 8, 1.0 + 0i);
-			Matmul_Wrapper('N', 'N', buffer, comp_trans_matrix, *matrix, 8, 8, 8, 1.0 + 0i);
+			Matmul_Wrapper('N', 'N', comp_trans_matrix, *matrix, buffer, 8, 8, 8, 1.0 + 0i);
+			Matmul_Wrapper('N', 'C', buffer, comp_trans_matrix, *matrix, 8, 8, 8, 1.0 + 0i);
 		}
 }
 

@@ -16,6 +16,6 @@ end kpath #Keyword to end the block
 #QI calcualtions
 kmesh  #three integers, set the number of kpoints (Gamma centred) around the gamma point
 bz_part #three integers, set what chunk of bz is taken into the calculation in each direction (from 0 to 1)
-omega_start = #angular frequency at which to start the calculations (Hz)
-omega_end = #where to end the calculation (Hz)
-omega_step = #step for the calculation (Hz)
+omega_start = #angular frequency at which to start the calculations (eV)
+omega_end = #where to end the calculation (eV)
+omega_step = #step for the calculation (eV)

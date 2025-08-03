@@ -62,9 +62,6 @@ vector<tensor> make_qi_tensor(){
         delta += pow(kpoints[0][2] - kpoints[1][2], 2);
         delta = sqrt(delta);
 
-	unique_ptr<complex<double>[]> px = make_unique<complex<double>[]>(64);
-	unique_ptr<complex<double>[]> py = make_unique<complex<double>[]>(64);
-	unique_ptr<complex<double>[]> pz = make_unique<complex<double>[]>(64);
 
 	double sigma = make_sigma(delta,lattice) / 5;
 	double size = kpoints.size();
@@ -73,19 +70,36 @@ vector<tensor> make_qi_tensor(){
 	double P = sqrt(E_MASS * Ep * E_CHARGE / 2);
 	double prefactor = Vk / pow(E_MASS, 4) * 2 / pow(PI, 2) * E_CHARGE / pow(PLANC, 3) * pow(P, 4) ;
 	complex<double> part_sum = 0;
+	int num_thr;
+	vector<tensor> current_tensor;
+	int reserve = 1;
 	while (omega < omegas[1]){
 		cout << endl;
 		file << setw(8) << setprecision(3) << left <<  omega * (PLANC);
-		tensor current_tensor;
+		#pragma omp parallel shared(omega, current_tensor, num_thr, kpoints) firstprivate(Opt, part_sum)
+		{
+		unique_ptr<complex<double>[]> px = make_unique<complex<double>[]>(64);
+		unique_ptr<complex<double>[]> py = make_unique<complex<double>[]>(64);
+		unique_ptr<complex<double>[]> pz = make_unique<complex<double>[]>(64);
+		#pragma omp master
+		{
+		num_thr = omp_get_num_threads();
+		if (reserve == 1)
+		{
+			current_tensor.reserve(num_thr);
+			reserve = 0;
+		}
+		}
+		int thr_num = omp_get_thread_num();
 		for (int a1 = 0; a1 < 3; a1++){ //loop over indicies
 			for (int a2 = 0; a2 < 6; a2++){
 				for (int a3 = 0; a3 < 3; a3++){
-					current_tensor[a1][a2][a3] = 0;
+					current_tensor[thr_num][a1][a2][a3] = 0;
 				}
 			}
 		}
-		#pragma omp parallel for shared(omega, current_tensor) firstprivate(Opt, part_sum)
-		for (int kk = 0; kk < kpoints.size(); kk++  ){
+		#pragma omp for
+		for (int kk = 0; kk < kpoints.size() ; kk++  ){
 			auto kpoint = kpoints[kk];
 			tensor local_tensor;
 			Opt.compute_at_kpoint(kpoint[0], kpoint[1], kpoint[2]);
@@ -116,35 +130,33 @@ vector<tensor> make_qi_tensor(){
 									       	(*(p[ind2]))[valence * 8 + b3] * (*(p[ind1]))[b3 * 8 + cond]) / 2.0;
 									num *= (*(p[a3]))[cond * 8 + valence];
 									complex<double> frac = prefactor * 1i * num / denom * weight;
-									part_sum+=frac;
+									current_tensor[thr_num][a1][a2][a3] += frac;
 								}
 							}
 						}
-						local_tensor[a1][a2][a3] = local_tensor[a1][a2][a3] + part_sum;
-						part_sum = 0;
 					}
 				}
 			}
-		#pragma omp critical
-	   	 {
-        	for (int a1 = 0; a1 < 3; a1++){
+		}
+		}
+		tensor resulting_tensor;
+		for (int a1 = 0; a1 < 3; a1++){
             		for (int a2 = 0; a2 < 6; a2++){
                 		for (int a3 = 0; a3 < 3; a3++){
-                    			current_tensor[a1][a2][a3] += local_tensor[a1][a2][a3];
+					for (int thr = 0; thr < num_thr; thr++){
+                    				resulting_tensor[a1][a2][a3] += current_tensor[thr][a1][a2][a3];
+					}
     				}
 			}
 		}
-		 }
-		}
-		
-		result.emplace_back(current_tensor);
+		result.emplace_back(resulting_tensor);
 		cout << endl;
 		ii++;
-		cout << omega * (PLANC) << ' ' <<  abs(current_tensor[0][0][0]) << endl;
+		cout << omega * (PLANC) << ' ' <<  abs(resulting_tensor[0][0][0]) << endl;
         	for (int a1 = 0; a1 < 3; a1++){
             		for (int a2 = 0; a2 < 6; a2++){
                 		for (int a3 = 0; a3 < 3; a3++){
-					file << setw(15) << setprecision(3) << left << current_tensor[a1][a2][a3];
+					file << setw(15) << setprecision(3) << left << resulting_tensor[a1][a2][a3];
     				}
 			}
 		}

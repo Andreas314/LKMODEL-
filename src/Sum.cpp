@@ -21,19 +21,19 @@
 #include "KMesh.h"
 #include "Sum.h"
 using namespace std;
-typedef array<array<array<complex<double>, 3>,6>,3> tensor;
+typedef array<array<array<complex<double>, 6>,3>,3> tensor;
 
 vector<tensor> make_qi_tensor(){
 	int val = system("touch QI_LKMODEL.dat");
 	ofstream file("QI_LKMODEL.dat");
-	file << setw(8) << left << "omega";
+	file << setw(20) << left << "omega";
 	array<string, 3> coord_1 = {"x", "y", "z"};
 	array<string, 6> coord_2 = {"xx", "yy", "zz", "yz", "xz", "xy"};
 	for (int aa = 0; aa < 3; aa++){
-		for (int bb= 0; bb <  6; bb++){
-			for (int cc = 0; cc < 3; cc++){
-				string toprint = coord_1[aa] + coord_2[bb] + coord_1[cc];
-				file << setw(15) << left << toprint;
+		for (int cc = 0; cc < 3; cc++){
+			for (int bb= 0; bb <  6; bb++){
+				string toprint = coord_1[aa] + coord_1[cc] + coord_2[bb];
+				file << setw(20) << left << toprint;
 			}
 		}
 	}
@@ -75,7 +75,7 @@ vector<tensor> make_qi_tensor(){
 	int reserve = 1;
 	while (omega < omegas[1]){
 		cout << endl;
-		file << setw(8) << setprecision(3) << left <<  omega * (PLANC);
+		file << setw(20) << setprecision(5) << left <<  omega * (PLANC);
 		#pragma omp parallel shared(omega, current_tensor, num_thr, kpoints) firstprivate(Opt, part_sum)
 		{
 		unique_ptr<complex<double>[]> px = make_unique<complex<double>[]>(64);
@@ -92,8 +92,8 @@ vector<tensor> make_qi_tensor(){
 		}
 		int thr_num = omp_get_thread_num();
 		for (int a1 = 0; a1 < 3; a1++){ //loop over indicies
-			for (int a2 = 0; a2 < 6; a2++){
-				for (int a3 = 0; a3 < 3; a3++){
+				for (int a2 = 0; a2 < 3; a2++){
+					for (int a3 = 0; a3 < 6; a3++){
 					current_tensor[thr_num][a1][a2][a3] = 0;
 				}
 			}
@@ -108,10 +108,10 @@ vector<tensor> make_qi_tensor(){
 			Opt.get_p_complex(2, pz);
 			vector<unique_ptr<complex<double>[]> *> p = {&px, &py, &pz};
 			for (int a1 = 0; a1 < 3; a1++){ //loop over indicies
-				for (int a2 = 0; a2 < 6; a2++){
-					int ind1 = symm_ind[a2][0] - 1;
-					int ind2 = symm_ind[a2][1] - 1;
-					for (int a3 = 0; a3 < 3; a3++){
+				for (int a2 = 0; a2 < 3; a2++){
+					for (int a3 = 0; a3 < 6; a3++){
+						int ind1 = symm_ind[a3][0] - 1;
+						int ind2 = symm_ind[a3][1] - 1;
 						for (int b1 = 0; b1 < 6; b1 ++){ //loop over bands
 							double valence = valence_ind[b1];
 							double E_val = Opt.get_energy(valence);
@@ -128,7 +128,7 @@ vector<tensor> make_qi_tensor(){
 									complex<double> num = (*(p[a1]))[cond * 8 + cond] - (*(p[a1]))[valence * 8 + valence];
 									num *= ((*(p[ind1]))[valence * 8 + b3] * (*(p[ind2]))[b3 * 8 + cond] +
 									       	(*(p[ind2]))[valence * 8 + b3] * (*(p[ind1]))[b3 * 8 + cond]) / 2.0;
-									num *= (*(p[a3]))[cond * 8 + valence];
+									num *= (*(p[a2]))[cond * 8 + valence];
 									complex<double> frac = prefactor * 1i * num / denom * weight;
 									current_tensor[thr_num][a1][a2][a3] += frac;
 								}
@@ -141,8 +141,8 @@ vector<tensor> make_qi_tensor(){
 		}
 		tensor resulting_tensor;
 		for (int a1 = 0; a1 < 3; a1++){
-            		for (int a2 = 0; a2 < 6; a2++){
-                		for (int a3 = 0; a3 < 3; a3++){
+            		for (int a2 = 0; a2 < 3; a2++){
+                		for (int a3 = 0; a3 < 6; a3++){
 					for (int thr = 0; thr < num_thr; thr++){
                     				resulting_tensor[a1][a2][a3] += current_tensor[thr][a1][a2][a3];
 					}
@@ -154,9 +154,9 @@ vector<tensor> make_qi_tensor(){
 		ii++;
 		cout << omega * (PLANC) << ' ' <<  abs(resulting_tensor[0][0][0]) << endl;
         	for (int a1 = 0; a1 < 3; a1++){
-            		for (int a2 = 0; a2 < 6; a2++){
-                		for (int a3 = 0; a3 < 3; a3++){
-					file << setw(15) << setprecision(3) << left << resulting_tensor[a1][a2][a3];
+            		for (int a2 = 0; a2 < 3; a2++){
+                		for (int a3 = 0; a3 < 6; a3++){
+					file << setw(21) << setprecision(5) << left << resulting_tensor[a1][a2][a3];
     				}
 			}
 		}

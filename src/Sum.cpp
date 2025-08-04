@@ -69,7 +69,7 @@ vector<tensor> make_qi_tensor(){
 	//double Vk = 4 * PI / 3 * abs(pow(PI / lattice * bz_part, 3)) / size;
 	double Vk = pow( 2 * PI / lattice * delta, 3);
 	double P = sqrt(E_MASS * Ep * E_CHARGE / 2);
-	double prefactor = Vk / pow(E_MASS, 4) * 4 / pow(PI, 2) * E_CHARGE / pow(PLANC, 3) * pow(P, 4);
+	double prefactor = Vk / pow(E_MASS, 4) * 2 / pow(PI, 2) * E_CHARGE / pow(PLANC, 3) * pow(P, 4);
 	complex<double> part_sum = 0;
 	int num_thr;
 	vector<tensor> current_tensor;
@@ -123,7 +123,7 @@ vector<tensor> make_qi_tensor(){
 								double omega_cv = (E_cond - E_val) / (PLANC);
 								double omega_cv_1 = (E_cond + E_val) / (PLANC) / 2;
 								double weight = gauss(omega_cv, 2 * omega, sigma);
-								if (weight < gauss( -sigma + 2 * omega , 2 * omega, sigma)){
+								if (weight < gauss( -2 * sigma + 2 * omega , 2 * omega, sigma)){
 									continue;
 								}
 								for (int b3 = 0; b3 < 8; b3++){

@@ -171,7 +171,7 @@ void hamiltonian::assemble(double kx, double ky, double kz){
 	double Q = prefactor * gamma_2 * (kx * kx + ky * ky - 2 * kz * kz);
 	c_d R = prefactor * sqrt(3) * (gamma_2 * (kx * kx - ky * ky) - 2.0 * 1i * gamma_3 * kx * ky);
 	c_d S = prefactor * sqrt(6) * gamma_3 * (kx - 1i * ky) * kz;
-	c_d T = 1 / sqrt(6) * P_0 * (kx + 1i * kz);
+	c_d T = 1 / sqrt(6) * P_0 * (kx + 1i * ky);
 	c_d U = 1 / sqrt(3) * P_0 * kz;
 	//Hamiltonian elements in [eV]
 	Q *= J_TO_EV;

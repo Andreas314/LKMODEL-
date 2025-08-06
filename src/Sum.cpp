@@ -29,7 +29,7 @@ vector<tensor> make_qi_tensor(){
 	file << setw(20) << left << "omega";
 	array<string, 3> coord_1 = {"x", "y", "z"};
 	array<string, 6> coord_2 = {"xx", "yy", "zz", "yz", "xz", "xy"};
-	array<string, 2> coord_3 = {"_Real", "_IMAG"};
+	array<string, 2> coord_3 = {"_real", "_imag"};
 	for (int aa = 0; aa < 3; aa++){
 		for (int cc = 0; cc < 3; cc++){
 			for (int bb= 0; bb <  6; bb++){

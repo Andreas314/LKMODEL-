@@ -29,11 +29,14 @@ vector<tensor> make_qi_tensor(){
 	file << setw(20) << left << "omega";
 	array<string, 3> coord_1 = {"x", "y", "z"};
 	array<string, 6> coord_2 = {"xx", "yy", "zz", "yz", "xz", "xy"};
+	array<string, 2> coord_3 = {"_Real", "_IMAG"};
 	for (int aa = 0; aa < 3; aa++){
 		for (int cc = 0; cc < 3; cc++){
 			for (int bb= 0; bb <  6; bb++){
-				string toprint = coord_1[aa] + coord_1[cc] + coord_2[bb];
+				for (int dd = 0; dd < 2; dd++){
+				string toprint = coord_1[aa] + coord_1[cc] + coord_2[bb] + coord_3[dd];
 				file << setw(20) << left << toprint;
+				}
 			}
 		}
 	}
@@ -63,8 +66,8 @@ vector<tensor> make_qi_tensor(){
         delta = sqrt(delta);
 
 
-	double sigma = make_sigma(delta,lattice);
-	//double sigma = 0.05 / (PLANC);
+	//double sigma = make_sigma(delta,lattice);
+	double sigma = 0.05 / (PLANC);
 	double size = kpoints.size();
 	//double Vk = 4 * PI / 3 * abs(pow(PI / lattice * bz_part, 3)) / size;
 	double Vk = pow( 2 * PI / lattice * delta, 3);
@@ -76,7 +79,7 @@ vector<tensor> make_qi_tensor(){
 	int reserve = 1;
 	while (omega < omegas[1]){
 		cout << endl;
-		file << setw(20) << setprecision(5) << left <<  omega * (PLANC);
+		file << setw(10) << setprecision(5) << left <<  omega * (PLANC);
 		#pragma omp parallel shared(omega, current_tensor, num_thr, kpoints) firstprivate(Opt, part_sum)
 		{
 		unique_ptr<complex<double>[]> px = make_unique<complex<double>[]>(64);
@@ -161,7 +164,8 @@ vector<tensor> make_qi_tensor(){
         	for (int a1 = 0; a1 < 3; a1++){
             		for (int a2 = 0; a2 < 3; a2++){
                 		for (int a3 = 0; a3 < 6; a3++){
-					file << setw(21) << setprecision(5) << left << resulting_tensor[a1][a2][a3];
+					file << setw(20) << setprecision(5) << left << real(resulting_tensor[a1][a2][a3]);
+					file << setw(20) << setprecision(5) << left << imag(resulting_tensor[a1][a2][a3]);
     				}
 			}
 		}

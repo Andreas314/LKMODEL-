@@ -1,10 +1,9 @@
-!#/bin/bash
 #!/bin/bash
 result=0
 for ii in {2..55}
 do
 	infile="$(cat $1 | head -n 1 | tr -s ' '| cut -d ' ' -f $ii)"
-	if [[ "$infile" = "$2" ]]
+	if [[ "$infile" = "$2_Real" ]]
 	then
 		result=$ii
 		break
@@ -15,6 +14,7 @@ then
 	echo "Error: Index not found!"
 	exit 1
 fi
-cat $1 | tr -s ' '| cut -d ' ' -f 1,$result
+next="$(( $result + 1 ))"
+cat $1 | tr -s ' '| cut -d ' ' -f 1,$result,$next
 exit 0
 

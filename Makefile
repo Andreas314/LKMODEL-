@@ -6,7 +6,7 @@ LDFLAGS = -llapack -lblas -fopenmp
 # Directories
 SRC_DIR = src
 OBJ_DIR = obj
-BIN_DIR = .
+BIN_DIR = bin
 
 # Sources and objects
 SRC = $(wildcard $(SRC_DIR)/*.cpp)

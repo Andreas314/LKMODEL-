@@ -25,16 +25,17 @@ typedef array<array<array<complex<double>, 6>,3>,3> tensor;
 
 vector<tensor> make_qi_tensor(int do_decomposition){
 	// First block to make and open all necessary files
-	int val = system("touch QI_LKMODEL.dat");
-	ofstream file("QI_LKMODEL.dat");
+	int val = system("mkdir -p out");
+	val = system("touch out/QI_LKMODEL.dat");
+	ofstream file("out/QI_LKMODEL.dat");
 	ofstream file1, file2, file3;
 	if (do_decomposition){
-		val = system("touch QI_LKMODEL_DECOMP_SO.dat");
-		file1.open("QI_LKMODEL_DECOMP_SO.dat");
-		val = system("touch QI_LKMODEL_DECOMP_HH.dat");
-		file2.open("QI_LKMODEL_DECOMP_HH.dat");
-		val = system("touch QI_LKMODEL_DECOMP_LH.dat");
-		file3.open("QI_LKMODEL_DECOMP_LH.dat");
+		val = system("touch out/QI_LKMODEL_DECOMP_SO.dat");
+		file1.open("out/QI_LKMODEL_DECOMP_SO.dat");
+		val = system("touch out/QI_LKMODEL_DECOMP_HH.dat");
+		file2.open("out/QI_LKMODEL_DECOMP_HH.dat");
+		val = system("touch out/QI_LKMODEL_DECOMP_LH.dat");
+		file3.open("out/QI_LKMODEL_DECOMP_LH.dat");
 	}
 	//write the headers to the files
 	file << setw(20) << left << "omega";

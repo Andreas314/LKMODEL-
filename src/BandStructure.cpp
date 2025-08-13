@@ -16,10 +16,11 @@ using namespace std;
 		read_kpoints();
 	}
 	void band_structure::do_plot(){
-		system("touch BAND_LKMODEL.dat");
-		system("touch LABELS_LKMODEL.dat");
-		ofstream open_file("BAND_LKMODEL.dat");
-		ofstream open_file_1("LABELS_LKMODEL.dat");
+		int val = system("mkdir -p out");
+		val = system("touch out/BAND_LKMODEL.dat");
+		val = system("touch out/LABELS_LKMODEL.dat");
+		ofstream open_file("out/BAND_LKMODEL.dat");
+		ofstream open_file_1("out/LABELS_LKMODEL.dat");
 		compute_eigenvals();
 		open_file << "\n";
 		int len = len_kpath / 2 * num_kpoints;

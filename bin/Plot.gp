@@ -1,6 +1,6 @@
 #!/usr/bin/env gnuplot
-
-set output 'BAND_LKMODEL.pdf'
+system 'mkdir -p out'
+set output 'out/BAND_LKMODEL.pdf'
 set terminal pdf
 set xtics auto
 load "LABELS_LKMODEL.dat"

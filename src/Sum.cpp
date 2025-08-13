@@ -23,10 +23,23 @@
 using namespace std;
 typedef array<array<array<complex<double>, 6>,3>,3> tensor;
 
-vector<tensor> make_qi_tensor(){
+vector<tensor> make_qi_tensor(int do_decomposition){
 	int val = system("touch QI_LKMODEL.dat");
 	ofstream file("QI_LKMODEL.dat");
+	//if (do_decomposition){
+		val = system("touch QI_LKMODEL_DECOMP_SO.dat");
+		ofstream file1("QI_LKMODEL_DECOMP_SO.dat");
+		val = system("touch QI_LKMODEL_DECOMP_HH.dat");
+		ofstream file2("QI_LKMODEL_DECOMP_HH.dat");
+		val = system("touch QI_LKMODEL_DECOMP_LH.dat");
+		ofstream file3("QI_LKMODEL_DECOMP_LH.dat");
+	//}
 	file << setw(20) << left << "omega";
+	if (do_decomposition){
+	file1 << setw(20) << left << "omega";
+	file2 << setw(20) << left << "omega";
+	file3 << setw(20) << left << "omega";
+	}
 	array<string, 3> coord_1 = {"x", "y", "z"};
 	array<string, 6> coord_2 = {"xx", "yy", "zz", "yz", "xz", "xy"};
 	array<string, 2> coord_3 = {"_real", "_imag"};
@@ -34,19 +47,32 @@ vector<tensor> make_qi_tensor(){
 		for (int cc = 0; cc < 3; cc++){
 			for (int bb= 0; bb <  6; bb++){
 				for (int dd = 0; dd < 2; dd++){
-				string toprint = coord_1[aa] + coord_1[cc] + coord_2[bb] + coord_3[dd];
-				file << setw(20) << left << toprint;
+					string toprint = coord_1[aa] + coord_1[cc] + coord_2[bb] + coord_3[dd];
+					file << setw(20) << left << toprint;
+					if (do_decomposition){
+						file1 << setw(20) << left << toprint;
+						file2 << setw(20) << left << toprint;
+						file3 << setw(20) << left << toprint;
+				}
 				}
 			}
 		}
 	}
 	file << endl;
-
-	vector<tensor> result;
+	if (do_decomposition){
+		file1 << endl;
+		file2 << endl;
+		file3 << endl;
+	}
 	array<double, 3> omegas;
 	read_omegas(omegas);
 	int num_omegas = floor((omegas[1] - omegas[0]) / omegas[2]) + 1;
+	vector<tensor> result;
 	result.reserve(num_omegas);
+	//if (do_decomposition){
+		vector<array<tensor, 3>> decomposed_result;
+		decomposed_result.reserve(num_omegas);
+	//}
 	double omega = omegas[0];
 
 	int ii = 0;
@@ -76,11 +102,13 @@ vector<tensor> make_qi_tensor(){
 	complex<double> part_sum = 0;
 	int num_thr;
 	vector<tensor> current_tensor;
+	//if (do_decomposition){
+		vector<array<tensor, 3>> decomposed_current_tensor;
+	//}
 	int reserve = 1;
 	while (omega < omegas[1]){
 		cout << endl;
-		file << setw(10) << setprecision(5) << left <<  omega * (PLANC);
-		#pragma omp parallel shared(omega, current_tensor, num_thr, kpoints) firstprivate(Opt, part_sum)
+		#pragma omp parallel shared(omega, do_decomposition, current_tensor, num_thr, kpoints, decomposed_current_tensor) firstprivate(Opt, part_sum)
 		{
 		unique_ptr<complex<double>[]> px = make_unique<complex<double>[]>(64);
 		unique_ptr<complex<double>[]> py = make_unique<complex<double>[]>(64);
@@ -91,6 +119,7 @@ vector<tensor> make_qi_tensor(){
 		if (reserve == 1)
 		{
 			current_tensor.reserve(num_thr);
+			decomposed_current_tensor.reserve(num_thr);
 			reserve = 0;
 		}
 		}
@@ -101,6 +130,17 @@ vector<tensor> make_qi_tensor(){
 					current_tensor[thr_num][a1][a2][a3] = 0;
 				}
 			}
+		}
+		if (do_decomposition){
+		for (int a0 = 0; a0 < 3; a0++){
+			for (int a1 = 0; a1 < 3; a1++){ //loop over indicies
+					for (int a2 = 0; a2 < 3; a2++){
+						for (int a3 = 0; a3 < 6; a3++){
+							decomposed_current_tensor[thr_num][a0][a1][a2][a3] = 0;
+						}
+					}
+				}
+			}	
 		}
 		#pragma omp for
 		for (int kk = 0; kk < kpoints.size() ; kk++  ){
@@ -139,6 +179,10 @@ vector<tensor> make_qi_tensor(){
 									num *= (*(p[a2]))[cond * 8 + valence];
 									complex<double> frac = prefactor * 1i * num / denom * weight;
 									current_tensor[thr_num][a1][a2][a3] += frac;
+									if (do_decomposition){
+										int index = b1 / 2;
+										decomposed_current_tensor[thr_num][index][a1][a2][a3] += frac;
+									}
 								}
 							}
 						}
@@ -147,32 +191,62 @@ vector<tensor> make_qi_tensor(){
 			}
 		}
 		}
-		tensor resulting_tensor;
+		sum_and_save(result, current_tensor, num_thr);
+		write_to_file(file, result.back(), omega);
+		if (do_decomposition){
+			sum_and_save_decomposed(decomposed_result, decomposed_current_tensor, num_thr);
+			array<tensor, 3> last_tensor = decomposed_result.back();
+			write_to_file(file1, last_tensor[0], omega);
+			write_to_file(file2, last_tensor[2], omega);
+			write_to_file(file3, last_tensor[1], omega);
+		}
+		cout << omega * (PLANC) << ' ' << (result.back())[0][0][0] << endl;
+		ii++;
+		omega = ii * omegas[2] + omegas[0];
+	}
+	return result;
+}
+
+void write_to_file(ofstream &file,auto &last_tensor, double omega){
+	file << setw(10) << setprecision(5) << left <<  omega * (PLANC);
+        for (int a1 = 0; a1 < 3; a1++){
+            	for (int a2 = 0; a2 < 3; a2++){
+                	for (int a3 = 0; a3 < 6; a3++){
+				file << setw(20) << setprecision(5) << left << real(last_tensor[a1][a2][a3]);
+				file << setw(20) << setprecision(5) << left << imag(last_tensor[a1][a2][a3]);
+    			}
+		}
+	}
+	file << endl;
+	
+}
+void sum_and_save(auto &result, auto & current, int num_thr){
+	tensor resulting_current_tensor;
+	for (int a1 = 0; a1 < 3; a1++){
+            	for (int a2 = 0; a2 < 3; a2++){
+                	for (int a3 = 0; a3 < 6; a3++){
+				for (int thr = 0; thr < num_thr; thr++){
+                    			resulting_current_tensor[a1][a2][a3] += current[thr][a1][a2][a3];
+				}
+    			}
+		}
+	}
+	result.emplace_back(resulting_current_tensor);
+}
+void sum_and_save_decomposed(auto &result, auto & current, int num_thr){
+	array<tensor, 3> resulting_current_tensor;
+	for(int a0 = 0; a0 < 3; a0++){
 		for (int a1 = 0; a1 < 3; a1++){
             		for (int a2 = 0; a2 < 3; a2++){
                 		for (int a3 = 0; a3 < 6; a3++){
 					for (int thr = 0; thr < num_thr; thr++){
-                    				resulting_tensor[a1][a2][a3] += current_tensor[thr][a1][a2][a3];
+                    				resulting_current_tensor[a0][a1][a2][a3] += current[thr][a0][a1][a2][a3];
 					}
     				}
 			}
 		}
-		result.emplace_back(resulting_tensor);
-		cout << endl;
-		ii++;
-		cout << omega * (PLANC) << ' ' <<  abs(resulting_tensor[0][0][0]) << endl;
-        	for (int a1 = 0; a1 < 3; a1++){
-            		for (int a2 = 0; a2 < 3; a2++){
-                		for (int a3 = 0; a3 < 6; a3++){
-					file << setw(20) << setprecision(5) << left << real(resulting_tensor[a1][a2][a3]);
-					file << setw(20) << setprecision(5) << left << imag(resulting_tensor[a1][a2][a3]);
-    				}
-			}
-		}
-		file << endl;
-		omega = ii * omegas[2] + omegas[0];
 	}
-	return result;
+	result.emplace_back(resulting_current_tensor);
 }
 
 void read_omegas(array<double, 3>& inp){

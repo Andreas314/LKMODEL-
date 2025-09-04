@@ -4,6 +4,7 @@
 #include "KMesh.h"
 #include "Sum.h"
 #include "BandStructure.h"
+#include "Current.h"
 #include <complex>
 #include <memory>
 #include <vector>
@@ -78,8 +79,14 @@ int main(int argc, char *argv[]){
 		if (arg != "-b" &&
 			arg != "-h" &&
 			arg != "-d" &&
-			arg != "-t"){
+			arg != "-t" &&
+			arg != "-j"){
 			throw runtime_error("Error: Unknown argument "+arg+"!");
+		}
+		if (arg == "-j"){
+			ii++;
+			string filename = argv[ii];
+			Current cr(filename);
 		}
 	}
 	cout << "Done!" << endl;

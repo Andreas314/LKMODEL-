@@ -87,6 +87,7 @@ int main(int argc, char *argv[]){
 			ii++;
 			string filename = argv[ii];
 			Current cr(filename);
+			cr.write_J();
 		}
 	}
 	cout << "Done!" << endl;

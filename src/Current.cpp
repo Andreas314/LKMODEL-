@@ -15,7 +15,7 @@
 #define pi 3.1415926
 #define light_c 3 * pow(10,8)
 #define epsilon 8.854 * pow(10, -12)
-
+#define H_PLANC 1.054571817*pow(10, -34)
 using namespace std;
 typedef array<complex<double>, 3> Jvector;
 Current::Current(string filename){
@@ -40,17 +40,19 @@ complex<double> Current::gauss_omega(double omega){
 }
 
 void Current::make_factor(){
+	factor = {0, 0, 0};
 	array<double, 3> E1 = params_vector["e_1"];
 	normal_vect(E1);
 	array<double, 3> E2 = params_vector["e_2"];
 	normal_vect(E2);
 	array<double, 3> E3 = params_vector["e_3"];
 	normal_vect(E3);
-	double I1 = params["I_1"];
-	double I2 = params["I_2"];
+	double I1 = params["i_1"];
+	double I2 = params["i_2"];
 	double n1 = params["n_1"];
 	double n2 = params["n_2"];
 	double omega = params["omega_0"];
+	double dpsi = params["delta_psi"];
 	int ii = 0;
 	double omega_o = omegas[0];
 	double omega_n = omegas[1];
@@ -65,25 +67,28 @@ void Current::make_factor(){
 		}
 	}
 	map<int, int> indecies = {{1,1}, {4, 2}, {9, 3}, {6, 4}, {3, 5}, {2, 6}};
-	complex<double> amplitude = gauss_omega(omega_o);
+	complex<double> amplitude = gauss_omega(omega_o * H_PLANC);
 	for(int ll = 0; ll < 3; ll++){
 		for(int jj = 0; jj < 3; jj++){
 			for(int kk = 0; kk < 3; kk++){
 				for(int hh = 0; hh < 3; hh++){
 					int index = indecies[kk * hh];		
-					factor[ll] += qi_tensor[ii][ll][jj][index] * E1[ll] * E2[ll] * E3[ll];
-					factor[ll] = amplitude * I1 * sqrt(I2) * n1 * n1 * n2 * pow(1 / (light_c * epsilon), 3 / 2) * pow(2, 5 / 2);
+					complex<double> stall = qi_tensor[ii][ll][jj][index] * E1[ll] * E2[ll] * E3[ll] * exp(1i * dpsi);
+					factor[ll] += (stall + conj(stall)) * amplitude * I1 * sqrt(I2) * n1 * n1 * n2 * pow(1 / (light_c * epsilon), 3.0 / 2.0) * pow(2, 5.0 / 2.0);
 				}
 			}
 		}
+	
 	}
+	cout << endl;
 }
 
 Jvector Current::to_solve(double t, Jvector y){
 	double delta_phi = params["delta_phi"];
 	Jvector dydt;
-	for (int ii = 0; ii < 3; ii++)
+	for (int ii = 0; ii < 3; ii++){
 		dydt[ii] = factor[ii] * gauss_t(t) * sin(delta_phi)  - y[ii] / params["tau_h"] - y[ii] / params["tau_e"];
+	}
 	return dydt;
 }
 
@@ -96,7 +101,7 @@ void Current::solve(){
 	J.reserve(len);
 	Jvector J_now;
 	for(int ii = 0; ii < 3; ii++){	
-		J_now[ii] = params_vector["J_0"][ii];
+		J_now[ii] = params_vector["j_0"][ii];
 	}
 	double t = t1;
 	for(int ii = 0; ii <= len; ii++){

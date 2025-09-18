@@ -85,9 +85,14 @@ int main(int argc, char *argv[]){
 		}
 		if (arg == "-j"){
 			ii++;
-			string filename = argv[ii];
-			Current cr(filename);
-			cr.write_J();
+			try{
+				string filename = argv[ii];
+				Current cr(filename);
+				cr.write_J();
+			}
+			catch(logic_error){
+				throw runtime_error("Error: No filename provided!");
+			}
 		}
 	}
 	cout << "Done!" << endl;

@@ -35,12 +35,11 @@ complex<double> Current::gauss_omega(double omega){
 	double tau_1 = params["tau_1"];
 	double tau_2 = params["tau_2"];
 	double delay = params["delay"];
-	complex<double> to_return = exp(- omega * omega * tau_1 * tau_1) * exp(- omega * omega * tau_2 * tau_2 / 2) * pow(2 * pi, 3 / 2) * tau_2 * tau_1 * tau_1 * exp(- 1i * omega * delay);
+	complex<double> to_return = exp(- omega * omega * tau_1 * tau_1) * exp(- 4 * omega * omega * tau_2 * tau_2 / 2) * pow(2 * pi, 3 / 2) * tau_2 * tau_1 * tau_1 * exp(- 1i * 2.0 * omega * delay);
 	return to_return;
 }
 
 void Current::make_factor(){
-	factor = {0, 0, 0};
 	array<double, 3> E1 = params_vector["e_1"];
 	normal_vect(E1);
 	array<double, 3> E2 = params_vector["e_2"];
@@ -67,14 +66,13 @@ void Current::make_factor(){
 		}
 	}
 	map<int, int> indecies = {{1,1}, {4, 2}, {9, 3}, {6, 4}, {3, 5}, {2, 6}};
-	complex<double> amplitude = gauss_omega(omega_o * H_PLANC);
 	for(int ll = 0; ll < 3; ll++){
 		for(int jj = 0; jj < 3; jj++){
 			for(int kk = 0; kk < 3; kk++){
 				for(int hh = 0; hh < 3; hh++){
 					int index = indecies[kk * hh];		
 					complex<double> stall = qi_tensor[ii][ll][jj][index] * E1[ll] * E2[ll] * E3[ll] * exp(1i * dpsi);
-					factor[ll] += (stall + conj(stall)) * amplitude * I1 * sqrt(I2) * n1 * n1 * n2 * pow(1 / (light_c * epsilon), 3.0 / 2.0) * pow(2, 5.0 / 2.0);
+					factor[ll] += (stall + conj(stall)) * I1 * sqrt(I2) * n1 * sqrt(n2) * pow(1 / (light_c * epsilon), 3.0 / 2.0) * pow(2, 5.0 / 2.0);
 				}
 			}
 		}
@@ -85,14 +83,17 @@ void Current::make_factor(){
 
 Jvector Current::to_solve(double t, Jvector y){
 	double delta_phi = params["delta_phi"];
+	double tau_h = params["tau_h"];
+	double tau_e = params["tau_e"];
 	Jvector dydt;
 	for (int ii = 0; ii < 3; ii++){
-		dydt[ii] = factor[ii] * gauss_t(t) * sin(delta_phi)  - y[ii] / params["tau_h"] - y[ii] / params["tau_e"];
+		dydt[ii] = factor[ii] * gauss_t(t)- y[ii] / tau_h * pow(10, 9) - y[ii] / tau_e * pow(10, 9);
 	}
 	return dydt;
 }
 
 void Current::solve(){
+	factor = {0, 0, 0};
 	make_factor();
 	double t1 = params["t_s"];
 	double t2 = params["t_f"];
@@ -107,7 +108,7 @@ void Current::solve(){
 	for(int ii = 0; ii <= len; ii++){
 		J.emplace_back(J_now);
 		t += dt;
-		J_now = rg_solve(t, J_now, dt, bind(&Current::to_solve, this, t, J_now));
+		J_now = rg_solve(t, J_now, dt * pow(10, -9), bind(&Current::to_solve, this, t, J_now));
 	}
 }
 
@@ -127,9 +128,9 @@ void Current::write_J(){
 	output << "\n";
 	for(int ii = 0; ii <= len; ii++){
 		output << setw(20) << setprecision(5) << t;
-		output << setw(20) << setprecision(5) << J[ii][0];
-		output << setw(20) << setprecision(5) << J[ii][1];
-		output << setw(20) << setprecision(5) << J[ii][2];
+		output << setw(20) << setprecision(5) << real(J[ii][0]);
+		output << setw(20) << setprecision(5) << real(J[ii][1]);
+		output << setw(20) << setprecision(5) << real(J[ii][2]);
 		output << "\n";
 		t += dt;
 	}

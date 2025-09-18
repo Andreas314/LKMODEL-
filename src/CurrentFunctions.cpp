@@ -18,7 +18,7 @@ set<string> expected_parameters_vectors = {"e_1", "e_2", "e_3", "j_0"};
 set<string> extra_parameters={"begin", "end", "kmesh", "bz_part", "omega_start", "omega_end", "omega_step",
        	"m_c*", "gamma_1^l", "gamma_2^l", "gamma_3^l", "delta_so", "e_g", "e_v", "a", "e_p"};
 void read_tensor(string filename, vector<tensor> &qi_tensor, vector<double> &omegas){
-	ifstream tensor_file("out/"+filename);
+	ifstream tensor_file(filename);
 	if (tensor_file.fail()){
 		throw runtime_error("Error: "+filename+" not found!");
 	}

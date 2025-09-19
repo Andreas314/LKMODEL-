@@ -1,6 +1,6 @@
 # LKMODEL
 
-**LKMODEL** is a parallel C++ program for diagonalizing the Hamiltonian of the 8-band Luttinger–Kohn (LK) model for zinc-blend structures, a key framework in semiconductor physics. It computes the electronic band structure and the quantum interference (QI) tensor for detailed analysis of multiband quantum systems.
+**LKMODEL** is a parallel C++ program for diagonalizing the Hamiltonian of the 8-band Luttinger–Kohn (LK) model for zinc-blend structures, a key framework in semiconductor physics. It computes the electronic band structure, the quantum interference (QI) tensor for detailed analysis of an eightband quantum systems and also current induced by Gaussian pulses.
 
 ---
 

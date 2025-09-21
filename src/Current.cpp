@@ -27,19 +27,20 @@ double Current::gauss_t(double t){
 	double tau_1 = params["tau_1"];
 	double tau_2 = params["tau_2"];
 	double delay = params["delay"];
-	double to_return = exp(- t * t / tau_1 / tau_1) * exp(- (t - delay) * (t - delay) / tau_2 / tau_2 / 2);
+	double to_return = exp(- t * t / tau_1 / tau_1 / 2 ) * exp(- (t - delay) * (t - delay) / tau_2 / tau_2 / 4);
 	return to_return;
 }
 
 complex<double> Current::gauss_omega(double omega){
-	double tau_1 = params["tau_1"];
-	double tau_2 = params["tau_2"];
+	double tau_1 = params["tau_1"]* pow(10, -9);
+	double tau_2 = params["tau_2"]* pow(10, -9);
 	double delay = params["delay"];
 	complex<double> to_return = exp(- omega * omega * tau_1 * tau_1) * exp(- 4 * omega * omega * tau_2 * tau_2 / 2) * pow(2 * pi, 3 / 2) * tau_2 * tau_1 * tau_1 * exp(- 1i * 2.0 * omega * delay);
 	return to_return;
 }
 
 void Current::make_factor(){
+	factor = {0, 0, 0};
 	array<double, 3> E1 = params_vector["e_1"];
 	normal_vect(E1);
 	array<double, 3> E2 = params_vector["e_2"];
@@ -51,17 +52,15 @@ void Current::make_factor(){
 	double n1 = params["n_1"];
 	double n2 = params["n_2"];
 	double omega = params["omega_0"];
-	double dpsi = params["delta_psi"];
+	double dpsi = params["delta_phi"];
 	int ii = 0;
 	double omega_o = omegas[0];
-	double omega_n = omegas[1];
-	while (omega > omega_o && omega < omega_n){
-		try{
+	while (omega > omega_o){
+		if (ii <= omegas.size()){
 			ii++;
-			double omega_o = omegas[ii];
-			double omega_n = omegas[ii+1];
+			omega_o = omegas[ii];
 		}
-		catch(const out_of_range oo){
+		else{
 			throw runtime_error("Error: omega_0 not in the computed range!");
 		}
 	}
@@ -70,30 +69,27 @@ void Current::make_factor(){
 		for(int jj = 0; jj < 3; jj++){
 			for(int kk = 0; kk < 3; kk++){
 				for(int hh = 0; hh < 3; hh++){
-					int index = indecies[kk * hh];		
-					complex<double> stall = qi_tensor[ii][ll][jj][index] * E1[ll] * E2[ll] * E3[ll] * exp(1i * dpsi);
-					factor[ll] += (stall + conj(stall)) * I1 * sqrt(I2) * n1 * sqrt(n2) * pow(1 / (light_c * epsilon), 3.0 / 2.0) * pow(2, 5.0 / 2.0);
+					int index = indecies[(kk + 1) * (hh + 1)] - 1;		
+					complex<double> stall = qi_tensor[ii][ll][jj][index] * E1[kk] * E2[hh] * E3[jj] * exp(1i * dpsi);
+					factor[ll] += (stall + conj(stall)) * I1 * sqrt(I2) / n1 / sqrt(n2) * pow(1 / (light_c * epsilon), 3.0 / 2.0);
 				}
 			}
 		}
 	
 	}
-	cout << endl;
 }
 
 Jvector Current::to_solve(double t, Jvector y){
-	double delta_phi = params["delta_phi"];
 	double tau_h = params["tau_h"];
 	double tau_e = params["tau_e"];
 	Jvector dydt;
 	for (int ii = 0; ii < 3; ii++){
-		dydt[ii] = factor[ii] * gauss_t(t)- y[ii] / tau_h * pow(10, 9) - y[ii] / tau_e * pow(10, 9);
+		dydt[ii] = factor[ii] * gauss_t(t)- y[ii] / (tau_h * pow(10, -9)) - y[ii] / (tau_e * pow(10, -9));
 	}
 	return dydt;
 }
 
 void Current::solve(){
-	factor = {0, 0, 0};
 	make_factor();
 	double t1 = params["t_s"];
 	double t2 = params["t_f"];

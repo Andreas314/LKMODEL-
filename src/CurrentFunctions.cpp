@@ -45,42 +45,29 @@ void read_tensor(string filename, vector<tensor> &qi_tensor, vector<double> &ome
 }
 Jvector rg_solve(double tn, Jvector yn, double dt, function<Jvector (double, Jvector)> f){
 	Jvector k1 = f(tn, yn);
-	for (int ii = 0; ii < 3; ii++){
-		k1[ii] *= dt;
-	}
 	Jvector prep;
-	for (int ii = 0; ii < 3; ii++){
-		prep[ii] *= yn[ii] + k1[ii] / 2.0;
-	}
-	
-
-	Jvector k2 = f(tn + dt / 2.0, prep);
-	for (int ii = 0; ii < 3; ii++){
-		k2[ii] *= dt;
-	}
-	for (int ii = 0; ii < 3; ii++){
-		prep[ii] *= yn[ii] + k2[ii] / 2.0;
-	}
-	
-
-	Jvector k3 = f(tn + dt / 2.0, prep);
-	for (int ii = 0; ii < 3; ii++){
-		k3[ii] *= dt;
-	}
-	for (int ii = 0; ii < 3; ii++){
-		prep[ii] *= yn[ii] + k3[ii];
-	}
-	
-
-	Jvector k4 = f(tn + dt, prep);
-	for (int ii = 0; ii < 3; ii++){
-		k4[ii] *= dt;
-	}
-
-
 	Jvector y_next;
 	for (int ii = 0; ii < 3; ii++){
-		y_next[ii] = yn[ii] + 1 / 6.0 * (k1[ii] + 2.0 * k2[ii] + 2.0 * k3[ii] + k4[ii]);
+		k1[ii] *= dt;
+		prep[ii] = yn[ii] + k1[ii] / 2.0;
+	}
+	
+	Jvector k2 = f(tn + dt * pow(10,9) / 2.0, prep);
+	for (int ii = 0; ii < 3; ii++){
+		k2[ii] *= dt;
+		prep[ii] = yn[ii] + k2[ii] / 2.0;
+	}
+	
+
+	Jvector k3 = f(tn + dt * pow(10,9) / 2.0, prep);
+	for (int ii = 0; ii < 3; ii++){
+		k3[ii] *= dt;
+		prep[ii] = yn[ii] + k3[ii];
+	}
+	Jvector k4 = f(tn + dt * pow(10,9), prep);
+	for (int ii = 0; ii < 3; ii++){
+		k4[ii] *= dt;
+		y_next[ii] = yn[ii] + 1.0 / 6.0 * (k1[ii] + 2.0 * k2[ii] + 2.0 * k3[ii] + k4[ii]);
 	}
 	return y_next;
 }
